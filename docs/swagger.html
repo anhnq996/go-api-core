@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ApiCore - API Documentation</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .topbar {
+        display: none;
+      }
+      .swagger-ui .info .title {
+        font-size: 36px;
+      }
+      .swagger-ui .info {
+        margin: 30px 0;
+      }
+      /* Custom styling */
+      .swagger-ui .opblock.opblock-get {
+        border-color: #61affe;
+        background: rgba(97, 175, 254, 0.1);
+      }
+      .swagger-ui .opblock.opblock-post {
+        border-color: #49cc90;
+        background: rgba(73, 204, 144, 0.1);
+      }
+      .swagger-ui .opblock.opblock-put {
+        border-color: #fca130;
+        background: rgba(252, 161, 48, 0.1);
+      }
+      .swagger-ui .opblock.opblock-delete {
+        border-color: #f93e3e;
+        background: rgba(249, 62, 62, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-standalone-preset.js"></script>
+    <script>
+      window.onload = function () {
+        // Determine the base URL
+        const baseUrl = window.location.origin;
+
+        // Initialize Swagger UI
+        const ui = SwaggerUIBundle({
+          url: baseUrl + "/swagger.json",
+          dom_id: "#swagger-ui",
+          deepLinking: true,
+          presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+          plugins: [SwaggerUIBundle.plugins.DownloadUrl],
+          layout: "StandaloneLayout",
+          defaultModelsExpandDepth: 1,
+          defaultModelExpandDepth: 1,
+          docExpansion: "list",
+          filter: true,
+          showExtensions: true,
+          showCommonExtensions: true,
+          tryItOutEnabled: true,
+          requestInterceptor: (request) => {
+            // Có thể thêm headers hoặc modify request ở đây
+            return request;
+          },
+          responseInterceptor: (response) => {
+            // Có thể xử lý response ở đây
+            return response;
+          },
+        });
+
+        window.ui = ui;
+      };
+    </script>
+  </body>
+</html>

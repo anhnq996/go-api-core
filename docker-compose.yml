@@ -1,0 +1,78 @@
+version: "3.8"
+
+services:
+  # Loki - Log aggregation system
+  loki:
+    image: grafana/loki:latest
+    container_name: apicore-loki
+    ports:
+      - "3100:3100"
+    # command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      # - ./config/loki-config.yaml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # Grafana - Visualization and analytics
+  grafana:
+    image: grafana/grafana:latest
+    container_name: apicore-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      # - ./config/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /etc/grafana/provisioning/datasources
+        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+        apiVersion: 1
+        datasources:
+        - name: Loki
+          type: loki
+          access: proxy
+          orgId: 1
+          url: http://loki:3100
+          basicAuth: false
+          isDefault: true
+          version: 1
+          editable: false
+        EOF
+        /run.sh
+    networks:
+      - monitoring
+    restart: unless-stopped
+    depends_on:
+      - loki
+
+  # Promtail (Optional) - Log shipper for Loki
+  # promtail:
+  #   image: grafana/promtail:2.9.3
+  #   container_name: apicore-promtail
+  #   volumes:
+  #     - ./storages/logs:/var/log/app
+  #     - ./config/promtail-config.yaml:/etc/promtail/config.yaml
+  #   command: -config.file=/etc/promtail/config.yaml
+  #   networks:
+  #     - monitoring
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - loki
+
+volumes:
+  loki-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+networks:
+  monitoring:
+    driver: bridge
