@@ -1,6 +1,27 @@
 version: "3.8"
 
 services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: apicore-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: apicore
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Loki - Log aggregation system
   loki:
     image: grafana/loki:latest
@@ -68,6 +89,8 @@ services:
   #     - loki
 
 volumes:
+  postgres-data:
+    driver: local
   loki-data:
     driver: local
   grafana-data:

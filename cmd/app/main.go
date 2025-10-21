@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"anhnq/api-core/config"
 	"anhnq/api-core/internal/routes"
 	"anhnq/api-core/internal/wire"
 	"anhnq/api-core/pkg/logger"
@@ -17,7 +18,7 @@ func main() {
 	// Khởi tạo logger
 	if err := logger.Init(logger.Config{
 		Level:        "debug",                 // debug, info, warn, error
-		Output:       "console,file,loki",     // console, file, loki (có thể kết hợp)
+		Output:       "console,file",          // console, file, loki (có thể kết hợp)
 		FilePath:     "storages/logs/app.log", // file log path
 		LokiURL:      "http://localhost:3100", // Loki server URL
 		EnableCaller: false,                   // hiển thị file:line
@@ -28,8 +29,16 @@ func main() {
 
 	logger.Info("Starting ApiCore application...")
 
+	// Kết nối database
+	dbConfig := config.GetDefaultDatabaseConfig()
+	db, err := config.ConnectDatabase(dbConfig)
+	if err != nil {
+		logger.Fatalf("Failed to connect to database: %v", err)
+	}
+	logger.Info("Database connected successfully")
+
 	// Wire tự động khởi tạo tất cả dependencies
-	controllers := wire.InitializeApp()
+	controllers := wire.InitializeApp(db)
 	logger.Info("Dependencies initialized successfully")
 
 	// Khởi tạo router

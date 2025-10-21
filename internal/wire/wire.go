@@ -9,12 +9,13 @@ import (
 	"anhnq/api-core/internal/routes"
 
 	"github.com/google/wire"
+	"gorm.io/gorm"
 )
 
-// InitializeApp khởi tạo toàn bộ ứng dụng
-func InitializeApp() *routes.Controllers {
+// InitializeApp khởi tạo toàn bộ ứng dụng với database
+func InitializeApp(db *gorm.DB) *routes.Controllers {
 	wire.Build(
-		// Repositories
+		// Repositories (cần DB)
 		repository.NewUserRepository,
 
 		// Services

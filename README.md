@@ -53,6 +53,7 @@ ApiCore/
 ### Yêu Cầu
 
 - Go 1.23.4 hoặc cao hơn
+- PostgreSQL 15+ (hoặc Docker)
 - Wire CLI (cho dependency injection)
 
 ### Cài Đặt
@@ -76,13 +77,32 @@ go mod download
 go install github.com/google/wire/cmd/wire@latest
 ```
 
-4. **Generate Wire code** (nếu cần)
+4. **Setup environment**
 
 ```bash
-wire ./internal/wire
+cp env.example .env
+# Điều chỉnh database config trong .env
 ```
 
-5. **Chạy server**
+5. **Start PostgreSQL**
+
+```bash
+docker-compose up -d postgres
+```
+
+6. **Run migrations**
+
+```bash
+go run cmd/migrate/main.go up
+```
+
+7. **Run seeders** (optional - tạo dữ liệu mẫu)
+
+```bash
+go run cmd/migrate/main.go seed
+```
+
+8. **Start server**
 
 ```bash
 go run cmd/app/main.go
@@ -327,9 +347,10 @@ Import file `swagger.json` vào Postman:
 
 - [chi](https://github.com/go-chi/chi) - Lightweight router
 - [wire](https://github.com/google/wire) - Dependency injection
+- [gorm](https://gorm.io) - ORM library
 - [uuid](https://github.com/google/uuid) - UUID generation
 - [zerolog](https://github.com/rs/zerolog) - Structured logging
-- [loki-client-go](https://github.com/grafana/loki-client-go) - Loki integration
+- PostgreSQL 15+ - Database
 
 ## 🔒 Security
 

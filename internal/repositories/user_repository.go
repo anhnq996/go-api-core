@@ -2,10 +2,9 @@ package repository
 
 import (
 	model "anhnq/api-core/internal/models"
-	"errors"
-	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // UserRepository interface
@@ -18,51 +17,80 @@ type UserRepository interface {
 	FindByEmail(email string) (*model.User, error)
 }
 
-// userRepository implement UserRepository
+// userRepository implement UserRepository với GORM
 type userRepository struct {
-	base *BaseRepository[model.User]
+	db *gorm.DB
 }
 
-func NewUserRepository() UserRepository {
+// NewUserRepository tạo user repository với GORM
+func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{
-		base: NewBaseRepository[model.User](),
+		db: db,
 	}
 }
 
-// Create
+// Create tạo user mới
 func (r *userRepository) Create(u model.User) (model.User, error) {
+	// GORM tự động set ID nếu dùng UUID default
 	if u.ID == "" {
 		u.ID = uuid.New().String()
 	}
-	u.CreatedAt = time.Now()
-	u.UpdatedAt = time.Now()
-	return r.base.Create(u.ID, u)
-}
 
-func (r *userRepository) FindAll() ([]model.User, error) {
-	return r.base.FindAll()
-}
-
-func (r *userRepository) FindByID(id string) (model.User, error) {
-	return r.base.FindByID(id)
-}
-
-func (r *userRepository) Update(id string, u model.User) (model.User, error) {
-	u.UpdatedAt = time.Now()
-	return r.base.Update(id, u)
-}
-
-func (r *userRepository) Delete(id string) error {
-	return r.base.Delete(id)
-}
-
-// Custom method riêng cho UserRepository
-func (r *userRepository) FindByEmail(email string) (*model.User, error) {
-	users, _ := r.base.FindAll()
-	for _, u := range users {
-		if u.Email == email {
-			return &u, nil
-		}
+	if err := r.db.Create(&u).Error; err != nil {
+		return model.User{}, err
 	}
-	return nil, errors.New("user not found")
+
+	return u, nil
+}
+
+// FindAll lấy tất cả users
+func (r *userRepository) FindAll() ([]model.User, error) {
+	var users []model.User
+	if err := r.db.Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+// FindByID tìm user theo ID
+func (r *userRepository) FindByID(id string) (model.User, error) {
+	var user model.User
+	if err := r.db.First(&user, "id = ?", id).Error; err != nil {
+		return model.User{}, err
+	}
+	return user, nil
+}
+
+// Update cập nhật user
+func (r *userRepository) Update(id string, u model.User) (model.User, error) {
+	var user model.User
+	if err := r.db.First(&user, "id = ?", id).Error; err != nil {
+		return model.User{}, err
+	}
+
+	// Update fields
+	if err := r.db.Model(&user).Updates(u).Error; err != nil {
+		return model.User{}, err
+	}
+
+	// Reload to get updated values
+	if err := r.db.First(&user, "id = ?", id).Error; err != nil {
+		return model.User{}, err
+	}
+
+	return user, nil
+}
+
+// Delete xóa user (soft delete)
+func (r *userRepository) Delete(id string) error {
+	return r.db.Delete(&model.User{}, "id = ?", id).Error
+}
+
+// FindByEmail tìm user theo email
+func (r *userRepository) FindByEmail(email string) (*model.User, error) {
+	var user model.User
+	if err := r.db.Where("email = ?", email).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
