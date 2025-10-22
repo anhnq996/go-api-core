@@ -8,6 +8,7 @@ import (
 	"anhnq/api-core/config"
 	"anhnq/api-core/internal/routes"
 	"anhnq/api-core/internal/wire"
+	"anhnq/api-core/pkg/cache"
 	"anhnq/api-core/pkg/logger"
 
 	"github.com/go-chi/chi/v5"
@@ -37,8 +38,19 @@ func main() {
 	}
 	logger.Info("Database connected successfully")
 
+	// Kết nối cache
+	cacheConfig := config.GetDefaultCacheConfig()
+	cacheClient, err := config.ConnectCache(cacheConfig)
+	if err != nil {
+		logger.Warnf("Failed to connect to cache: %v (using no-op cache)", err)
+		// Use no-op cache - app vẫn chạy nhưng không cache
+		cacheClient = cache.NewNoopCache()
+	} else {
+		logger.Info("Cache connected successfully")
+	}
+
 	// Wire tự động khởi tạo tất cả dependencies
-	controllers := wire.InitializeApp(db)
+	controllers := wire.InitializeApp(db, cacheClient)
 	logger.Info("Dependencies initialized successfully")
 
 	// Khởi tạo router

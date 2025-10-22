@@ -1,6 +1,37 @@
 version: "3.8"
 
 services:
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: apicore-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: apicore-redis-insight
+    ports:
+      - "5540:5540"
+    volumes:
+      - redis-insight-data:/db
+    networks:
+      - monitoring
+    restart: unless-stopped
+    depends_on:
+      - redis
+
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
@@ -89,11 +120,15 @@ services:
   #     - loki
 
 volumes:
+  redis-data:
+    driver: local
   postgres-data:
     driver: local
   loki-data:
     driver: local
   grafana-data:
+    driver: local
+  redis-insight-data:
     driver: local
 
 networks:

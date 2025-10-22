@@ -7,18 +7,19 @@ import (
 	"anhnq/api-core/internal/app/user"
 	repository "anhnq/api-core/internal/repositories"
 	"anhnq/api-core/internal/routes"
+	"anhnq/api-core/pkg/cache"
 
 	"github.com/google/wire"
 	"gorm.io/gorm"
 )
 
-// InitializeApp khởi tạo toàn bộ ứng dụng với database
-func InitializeApp(db *gorm.DB) *routes.Controllers {
+// InitializeApp khởi tạo toàn bộ ứng dụng với database và cache
+func InitializeApp(db *gorm.DB, cacheClient cache.Cache) *routes.Controllers {
 	wire.Build(
 		// Repositories (cần DB)
 		repository.NewUserRepository,
 
-		// Services
+		// Services (cần Repo + Cache)
 		user.NewService,
 
 		// Handlers

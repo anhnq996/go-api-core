@@ -10,15 +10,16 @@ import (
 	"anhnq/api-core/internal/app/user"
 	"anhnq/api-core/internal/repositories"
 	"anhnq/api-core/internal/routes"
+	"anhnq/api-core/pkg/cache"
 	"gorm.io/gorm"
 )
 
 // Injectors from wire.go:
 
-// InitializeApp khởi tạo toàn bộ ứng dụng với database
-func InitializeApp(db *gorm.DB) *routes.Controllers {
+// InitializeApp khởi tạo toàn bộ ứng dụng với database và cache
+func InitializeApp(db *gorm.DB, cacheClient cache.Cache) *routes.Controllers {
 	userRepository := repository.NewUserRepository(db)
-	service := user.NewService(userRepository)
+	service := user.NewService(userRepository, cacheClient)
 	handler := user.NewHandler(service)
 	controllers := routes.NewControllers(handler)
 	return controllers
