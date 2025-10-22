@@ -59,6 +59,11 @@ const (
 	// Pagination
 	CodeInvalidPage     = "INVALID_PAGE"
 	CodeInvalidPageSize = "INVALID_PAGE_SIZE"
+
+	// Authentication Success
+	CodeLoginSuccess   = "LOGIN_SUCCESS"
+	CodeLogoutSuccess  = "LOGOUT_SUCCESS"
+	CodeTokenRefreshed = "TOKEN_REFRESHED"
 )
 
 // GetHTTPStatusCode trả về HTTP status code tương ứng với response code

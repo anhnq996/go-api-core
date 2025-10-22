@@ -16,6 +16,7 @@ func main() {
 	// Subcommands
 	upCmd := flag.NewFlagSet("up", flag.ExitOnError)
 	downCmd := flag.NewFlagSet("down", flag.ExitOnError)
+	freshCmd := flag.NewFlagSet("fresh", flag.ExitOnError)
 	versionCmd := flag.NewFlagSet("version", flag.ExitOnError)
 	forceCmd := flag.NewFlagSet("force", flag.ExitOnError)
 	stepsCmd := flag.NewFlagSet("steps", flag.ExitOnError)
@@ -65,6 +66,9 @@ func main() {
 	case "down":
 		downCmd.Parse(os.Args[2:])
 		runDown(migrator)
+	case "fresh":
+		freshCmd.Parse(os.Args[2:])
+		runFresh(migrator)
 	case "version":
 		versionCmd.Parse(os.Args[2:])
 		showVersion(migrator)
@@ -105,6 +109,31 @@ func runDown(m *database.Migrator) {
 	}
 
 	fmt.Println("✅ All migrations rolled back")
+}
+
+func runFresh(m *database.Migrator) {
+	fmt.Println("⚠️  WARNING: This will DROP ALL TABLES!")
+	fmt.Println("Starting fresh migration...")
+
+	// Drop all first
+	version, _, _ := m.Version()
+	if version > 0 {
+		fmt.Println("Rolling back all migrations...")
+		if err := m.Down(); err != nil {
+			fmt.Printf("❌ Failed to rollback: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	// Run all migrations
+	fmt.Println("Running all migrations...")
+	if err := m.Up(); err != nil {
+		fmt.Printf("❌ Failed to migrate: %v\n", err)
+		os.Exit(1)
+	}
+
+	version, dirty, _ := m.Version()
+	fmt.Printf("✅ Fresh migration completed. Version: %d (dirty: %v)\n", version, dirty)
 }
 
 func showVersion(m *database.Migrator) {
@@ -183,6 +212,7 @@ Usage:
 Commands:
   up                Run all pending migrations
   down              Rollback all migrations
+  fresh             Drop all tables and re-run migrations (⚠️  destructive)
   version           Show current migration version
   force             Force set migration version (use when dirty)
   steps             Run N migration steps
@@ -192,6 +222,7 @@ Examples:
   # Migrations
   go run cmd/migrate/main.go up
   go run cmd/migrate/main.go down
+  go run cmd/migrate/main.go fresh          # Drop all + migrate (⚠️  destructive)
   go run cmd/migrate/main.go version
   go run cmd/migrate/main.go force -version 1
   go run cmd/migrate/main.go steps -n 1      # Run 1 migration up
@@ -199,6 +230,9 @@ Examples:
 
   # Seeders
   go run cmd/migrate/main.go seed
+
+  # Fresh setup (recommended)
+  make fresh                                 # Drop all + migrate + seed
 
 Options:
   force -version <N>    Version number to force

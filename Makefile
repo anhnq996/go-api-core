@@ -12,6 +12,7 @@ help:
 	@echo "  make migrate       - Run database migrations"
 	@echo "  make seed          - Run database seeders"
 	@echo "  make migrate-down  - Rollback migrations"
+	@echo "  make fresh         - Fresh setup (drop all + migrate + seed)"
 	@echo ""
 	@echo "  make docker-build  - Build Docker image"
 	@echo "  make docker-up     - Start all services"
@@ -64,8 +65,17 @@ seed:
 	@echo "Running seeders..."
 	@go run cmd/migrate/main.go seed
 
+migrate-fresh:
+	@echo "⚠️  Dropping all tables and re-running migrations..."
+	@go run cmd/migrate/main.go fresh
+	@echo "✅ Fresh migration complete"
+
 migrate-version:
 	@go run cmd/migrate/main.go version
+
+# Fresh setup (drop all, migrate, seed)
+fresh: migrate-fresh seed
+	@echo "✅ Fresh database setup complete!"
 
 # Docker commands
 docker-build:

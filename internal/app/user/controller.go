@@ -1,11 +1,12 @@
 package user
 
 import (
+	"net/http"
+
 	model "anhnq/api-core/internal/models"
 	"anhnq/api-core/pkg/i18n"
 	"anhnq/api-core/pkg/response"
-	"encoding/json"
-	"net/http"
+	"anhnq/api-core/pkg/validator"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -50,10 +51,17 @@ func (h *Handler) Show(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Store(w http.ResponseWriter, r *http.Request) {
 	lang := i18n.GetLanguageFromContext(r.Context())
 
-	var u model.User
-	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
-		response.BadRequest(w, lang, response.CodeInvalidInput, nil)
+	var input CreateUserRequest
+
+	// Validate request
+	if !validator.ValidateAndRespond(w, r, &input) {
 		return
+	}
+
+	// Convert to model
+	u := model.User{
+		Name:  input.Name,
+		Email: input.Email,
 	}
 
 	created, err := h.service.Create(u)
@@ -70,10 +78,18 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	lang := i18n.GetLanguageFromContext(r.Context())
 	id := chi.URLParam(r, "id")
 
-	var u model.User
-	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
-		response.BadRequest(w, lang, response.CodeInvalidInput, nil)
+	var input UpdateUserRequest
+
+	// Validate request
+	if !validator.ValidateAndRespond(w, r, &input) {
 		return
+	}
+
+	// Convert to model
+	u := model.User{
+		Name:   input.Name,
+		Email:  input.Email,
+		Avatar: input.Avatar,
 	}
 
 	updated, err := h.service.Update(id, u)

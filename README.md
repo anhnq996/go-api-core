@@ -46,6 +46,8 @@ go run cmd/migrate/main.go version  # Check version
 - ✅ **Multi-language support (i18n) - EN/VI**
 - ✅ **JWT Authentication & Authorization**
 - ✅ **Role-based access control (RBAC)**
+- ✅ **Auto validation với struct tags**
+- ✅ **Generic Base Repository pattern**
 - ✅ **FCM (Firebase Cloud Messaging) integration**
 - ✅ **Hot reload với Air**
 - ✅ **Utils package với 100+ helper functions**
@@ -85,7 +87,8 @@ ApiCore/
 │   ├── jwt/                        # JWT authentication
 │   ├── logger/                     # Structured logging
 │   ├── response/                   # Standardized REST API response
-│   └── utils/                      # Common helper functions
+│   ├── utils/                      # Common helper functions
+│   └── validator/                  # Auto validation với struct tags
 ├── translations/
 │   ├── en.json                     # English translations
 │   └── vi.json                     # Vietnamese translations
@@ -203,7 +206,9 @@ Truy cập documentation tại: **http://localhost:3000/docs**
 ### Hướng dẫn chi tiết
 
 - [**JWT Authentication Guide**](docs/jwt-guide.md) - Hướng dẫn JWT authentication 🌟
+- [**Validation Guide**](docs/validation-guide.md) - Hướng dẫn auto validation 🌟
 - [**Development Guide**](docs/development-guide.md) - Hướng dẫn phát triển
+- [Authentication Module](docs/AUTH_README.md) - Auth module documentation
 - [Routes Documentation](docs/routes.md) - Chi tiết về các API endpoints
 - [Swagger Guide](docs/swagger-guide.md) - Hướng dẫn sử dụng Swagger
 - [Docker Setup](DOCKER.md) - Hướng dẫn Docker
@@ -212,12 +217,14 @@ Truy cập documentation tại: **http://localhost:3000/docs**
 ### Package Documentation
 
 - [**pkg/jwt**](pkg/jwt/README.md) - JWT authentication & authorization 🌟
+- [**pkg/validator**](pkg/validator/README.md) - Auto validation với struct tags 🌟
 - [**pkg/response**](pkg/response/README.md) - Standardized REST API response 🌟
 - [**pkg/i18n**](pkg/i18n/README.md) - Internationalization (i18n) support 🌟
 - [**pkg/utils**](pkg/utils/README.md) - Common utility functions 🌟
 - [**pkg/fcm**](pkg/fcm/README.md) - Firebase Cloud Messaging 🌟
 - [pkg/logger](pkg/logger/README.md) - Structured logging
 - [pkg/cache](pkg/cache/README.md) - Redis caching utilities
+- [internal/repositories](internal/repositories/README.md) - Generic Base Repository pattern 🌟
 
 ## 🛣️ API Endpoints
 

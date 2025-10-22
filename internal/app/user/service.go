@@ -1,111 +1,123 @@
 package user
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"time"
-
 	model "anhnq/api-core/internal/models"
 	repository "anhnq/api-core/internal/repositories"
 	"anhnq/api-core/pkg/cache"
+
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/google/uuid"
 )
 
+// Service xử lý business logic cho user
 type Service struct {
 	repo  repository.UserRepository
 	cache cache.Cache
 }
 
-func NewService(r repository.UserRepository, c cache.Cache) *Service {
+const (
+	cacheKeyAll = "users:all"
+	cacheExpiry = 5 * time.Minute
+)
+
+// NewService tạo user service mới
+func NewService(repo repository.UserRepository, cacheClient cache.Cache) *Service {
 	return &Service{
-		repo:  r,
-		cache: c,
+		repo:  repo,
+		cache: cacheClient,
 	}
 }
 
+// GetAll lấy tất cả users
 func (s *Service) GetAll() ([]model.User, error) {
 	ctx := context.Background()
-	cacheKey := "users:all"
 
-	// Try get from cache using Remember pattern
-	result, err := s.cache.Remember(ctx, cacheKey, 5*time.Minute, func() (interface{}, error) {
-		// Cache miss - fetch from database
-		return s.repo.FindAll()
+	// Try to get from cache first
+	cached, err := s.cache.Remember(ctx, cacheKeyAll, cacheExpiry, func() (interface{}, error) {
+		return s.repo.FindAll(ctx)
 	})
 
 	if err != nil {
-		// Cache error - fallback to database
-		return s.repo.FindAll()
+		// If cache fails, try directly from DB
+		return s.repo.FindAll(ctx)
 	}
 
-	// Parse result
-	var users []model.User
-	jsonData, _ := json.Marshal(result)
-	if err := json.Unmarshal(jsonData, &users); err != nil {
-		// Parse error - fallback to database
-		return s.repo.FindAll()
+	// Convert cached data to []model.User
+	users, ok := cached.([]model.User)
+	if !ok {
+		// Cache data invalid, fetch from DB
+		return s.repo.FindAll(ctx)
 	}
 
 	return users, nil
 }
 
-func (s *Service) GetByID(id string) (model.User, error) {
+// GetByID lấy user theo ID
+func (s *Service) GetByID(id string) (*model.User, error) {
 	ctx := context.Background()
-	cacheKey := fmt.Sprintf("user:%s", id)
-
-	// Remember pattern for single user
-	result, err := s.cache.Remember(ctx, cacheKey, 10*time.Minute, func() (interface{}, error) {
-		return s.repo.FindByID(id)
-	})
-
+	userID, err := uuid.Parse(id)
 	if err != nil {
-		return s.repo.FindByID(id)
+		return nil, err
 	}
 
-	// Parse result
-	var user model.User
-	jsonData, _ := json.Marshal(result)
-	if err := json.Unmarshal(jsonData, &user); err != nil {
-		return s.repo.FindByID(id)
-	}
-
-	return user, nil
+	return s.repo.FindByID(ctx, userID)
 }
 
-func (s *Service) Create(u model.User) (model.User, error) {
-	created, err := s.repo.Create(u)
-	if err != nil {
-		return model.User{}, err
+// Create tạo user mới
+func (s *Service) Create(user model.User) (*model.User, error) {
+	ctx := context.Background()
+
+	if err := s.repo.Create(ctx, &user); err != nil {
+		return nil, err
 	}
 
-	// Invalidate cache list
-	ctx := context.Background()
-	s.cache.Del(ctx, "users:all")
+	// Invalidate cache
+	s.cache.Del(ctx, cacheKeyAll)
 
-	return created, nil
+	return &user, nil
 }
 
-func (s *Service) Update(id string, u model.User) (model.User, error) {
-	updated, err := s.repo.Update(id, u)
+// Update cập nhật user
+func (s *Service) Update(id string, user model.User) (*model.User, error) {
+	ctx := context.Background()
+	userID, err := uuid.Parse(id)
 	if err != nil {
-		return model.User{}, err
+		return nil, err
 	}
 
-	// Invalidate caches
-	ctx := context.Background()
-	s.cache.Del(ctx, "users:all", fmt.Sprintf("user:%s", id))
+	if err := s.repo.Update(ctx, userID, &user); err != nil {
+		return nil, err
+	}
+
+	// Get updated user
+	updated, err := s.repo.FindByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Invalidate cache
+	s.cache.Del(ctx, cacheKeyAll, fmt.Sprintf("user:%s", id))
 
 	return updated, nil
 }
 
+// Delete xóa user
 func (s *Service) Delete(id string) error {
-	if err := s.repo.Delete(id); err != nil {
+	ctx := context.Background()
+	userID, err := uuid.Parse(id)
+	if err != nil {
 		return err
 	}
 
-	// Invalidate caches
-	ctx := context.Background()
-	s.cache.Del(ctx, "users:all", fmt.Sprintf("user:%s", id))
+	if err := s.repo.Delete(ctx, userID); err != nil {
+		return err
+	}
+
+	// Invalidate cache
+	s.cache.Del(ctx, cacheKeyAll, fmt.Sprintf("user:%s", id))
 
 	return nil
 }

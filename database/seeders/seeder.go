@@ -15,10 +15,21 @@ type Seeder struct {
 // AllSeeders danh sách tất cả seeders
 var AllSeeders = []Seeder{
 	{
+		Name: "RoleSeeder",
+		Run:  SeedRoles,
+	},
+	{
+		Name: "PermissionSeeder",
+		Run:  SeedPermissions,
+	},
+	{
+		Name: "RolePermissionSeeder",
+		Run:  SeedRolePermissions,
+	},
+	{
 		Name: "UserSeeder",
 		Run:  SeedUsers,
 	},
-	// Thêm seeders khác ở đây
 }
 
 // RunSeeders chạy tất cả seeders

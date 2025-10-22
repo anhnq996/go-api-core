@@ -3,7 +3,6 @@ package jwt
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"anhnq/api-core/pkg/i18n"
 	"anhnq/api-core/pkg/response"
@@ -25,7 +24,7 @@ func (m *Manager) Middleware(next http.Handler) http.Handler {
 		lang := i18n.GetLanguageFromContext(r.Context())
 
 		// Lấy token từ Authorization header
-		token := extractTokenFromHeader(r)
+		token := ExtractTokenFromHeader(r)
 		if token == "" {
 			response.Unauthorized(w, lang, response.CodeTokenMissing)
 			return
@@ -55,7 +54,7 @@ func (m *Manager) Middleware(next http.Handler) http.Handler {
 // Nếu có token hợp lệ thì lưu claims vào context, nếu không có hoặc invalid thì vẫn cho qua
 func (m *Manager) OptionalMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := extractTokenFromHeader(r)
+		token := ExtractTokenFromHeader(r)
 		if token != "" {
 			claims, err := m.VerifyToken(token)
 			if err == nil {
@@ -98,22 +97,6 @@ func (m *Manager) RequireRole(roles ...string) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		})
 	}
-}
-
-// extractTokenFromHeader lấy token từ Authorization header
-func extractTokenFromHeader(r *http.Request) string {
-	auth := r.Header.Get("Authorization")
-	if auth == "" {
-		return ""
-	}
-
-	// Format: "Bearer <token>"
-	parts := strings.SplitN(auth, " ", 2)
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		return ""
-	}
-
-	return parts[1]
 }
 
 // GetClaimsFromContext lấy claims từ context
