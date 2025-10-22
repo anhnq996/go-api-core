@@ -9,6 +9,7 @@ import (
 	"anhnq/api-core/internal/routes"
 	"anhnq/api-core/internal/wire"
 	"anhnq/api-core/pkg/cache"
+	"anhnq/api-core/pkg/i18n"
 	"anhnq/api-core/pkg/logger"
 
 	"github.com/go-chi/chi/v5"
@@ -29,6 +30,17 @@ func main() {
 	}
 
 	logger.Info("Starting ApiCore application...")
+
+	// Khởi tạo i18n (đa ngôn ngữ)
+	if err := i18n.Init(i18n.Config{
+		TranslationsDir: "translations",
+		Languages:       []string{"en", "vi"},
+		FallbackLang:    "en",
+	}); err != nil {
+		logger.Warnf("Failed to initialize i18n: %v (using default messages)", err)
+	} else {
+		logger.Info("I18n initialized successfully")
+	}
 
 	// Kết nối database
 	dbConfig := config.GetDefaultDatabaseConfig()
@@ -60,6 +72,7 @@ func main() {
 	r.Use(middleware.RequestID) // Tạo unique ID cho mỗi request
 	r.Use(middleware.Recoverer) // Recover từ panic
 	r.Use(logger.Middleware())  // Log requests/responses với đầy đủ thông tin
+	r.Use(i18n.Middleware)      // Tự động detect và set language vào context
 
 	// Health check endpoint
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {

@@ -5,6 +5,7 @@ help:
 	@echo "Available commands:"
 	@echo "  make build         - Build binary"
 	@echo "  make run           - Run application"
+	@echo "  make watch         - Run with hot reload (auto restart on file changes)"
 	@echo "  make test          - Run tests"
 	@echo "  make clean         - Clean build artifacts"
 	@echo ""
@@ -29,6 +30,14 @@ build:
 run:
 	@echo "Starting application..."
 	@go run cmd/app/main.go
+
+# Run with hot reload (requires air: go install github.com/air-verse/air@latest)
+watch:
+	@echo "Starting application with hot reload..."
+	@air
+
+# Alias for watch
+dev-watch: watch
 
 # Run tests
 test:
@@ -105,6 +114,7 @@ install-tools:
 	@echo "Installing development tools..."
 	@go install github.com/google/wire/cmd/wire@latest
 	@go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+	@go install github.com/air-verse/air@latest
 	@echo "✅ Tools installed"
 
 # Lint

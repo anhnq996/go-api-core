@@ -7,13 +7,14 @@ API quản lý người dùng được xây dựng với Go, sử dụng kiến 
 ```bash
 # Setup lần đầu
 make setup            # Start services + migrate + seed
-make run              # Run app
+make watch            # Run app with hot reload
 
 # Development
 make dev              # Start PostgreSQL + Redis
 make migrate          # Run migrations
 make seed             # Run seeders
-make run              # Start server
+make run              # Start server (no reload)
+make watch            # Start server with hot reload (auto restart)
 make test             # Run tests
 
 # Production
@@ -41,6 +42,13 @@ go run cmd/migrate/main.go version  # Check version
 - ✅ Interactive API documentation với Swagger UI
 - ✅ Structured logging với zerolog
 - ✅ Request/response logging middleware
+- ✅ **Standardized REST API Response format**
+- ✅ **Multi-language support (i18n) - EN/VI**
+- ✅ **JWT Authentication & Authorization**
+- ✅ **Role-based access control (RBAC)**
+- ✅ **FCM (Firebase Cloud Messaging) integration**
+- ✅ **Hot reload với Air**
+- ✅ **Utils package với 100+ helper functions**
 - ✅ Health check endpoint
 - ✅ Panic recovery middleware
 - ✅ Request ID tracking
@@ -70,12 +78,24 @@ ApiCore/
 │   └── wire/
 │       ├── wire.go                 # Wire configuration
 │       └── wire_gen.go             # Generated DI code
+├── pkg/
+│   ├── cache/                      # Redis cache utilities
+│   ├── fcm/                        # Firebase Cloud Messaging
+│   ├── i18n/                       # Internationalization (EN/VI)
+│   ├── jwt/                        # JWT authentication
+│   ├── logger/                     # Structured logging
+│   ├── response/                   # Standardized REST API response
+│   └── utils/                      # Common helper functions
+├── translations/
+│   ├── en.json                     # English translations
+│   └── vi.json                     # Vietnamese translations
 ├── docs/
 │   ├── index.html                  # Documentation home
 │   ├── swagger.html                # Swagger UI
 │   ├── swagger.json                # OpenAPI specification
 │   ├── routes.md                   # Routes guide
-│   └── swagger-guide.md            # Swagger usage guide
+│   ├── swagger-guide.md            # Swagger usage guide
+│   └── response-and-i18n-guide.md  # Response & I18n guide
 ├── go.mod
 └── go.sum
 ```
@@ -174,13 +194,30 @@ Truy cập documentation tại: **http://localhost:3000/docs**
 
 ### Các Trang Documentation
 
-| URL                      | Mô Tả                                |
-| ------------------------ | ------------------------------------ |
-| `/docs`                  | Trang chủ documentation với overview |
-| `/swagger`               | Swagger UI - Interactive API testing |
-| `/swagger.json`          | OpenAPI specification file           |
-| `/docs/routes.md`        | Hướng dẫn về routes                  |
-| `/docs/swagger-guide.md` | Hướng dẫn sử dụng Swagger            |
+| URL             | Mô Tả                                |
+| --------------- | ------------------------------------ |
+| `/docs`         | Trang chủ documentation với overview |
+| `/swagger`      | Swagger UI - Interactive API testing |
+| `/swagger.json` | OpenAPI specification file           |
+
+### Hướng dẫn chi tiết
+
+- [**JWT Authentication Guide**](docs/jwt-guide.md) - Hướng dẫn JWT authentication 🌟
+- [**Development Guide**](docs/development-guide.md) - Hướng dẫn phát triển
+- [Routes Documentation](docs/routes.md) - Chi tiết về các API endpoints
+- [Swagger Guide](docs/swagger-guide.md) - Hướng dẫn sử dụng Swagger
+- [Docker Setup](DOCKER.md) - Hướng dẫn Docker
+- [Loki + Grafana Setup](docs/loki-grafana-setup.md) - Hướng dẫn setup logging
+
+### Package Documentation
+
+- [**pkg/jwt**](pkg/jwt/README.md) - JWT authentication & authorization 🌟
+- [**pkg/response**](pkg/response/README.md) - Standardized REST API response 🌟
+- [**pkg/i18n**](pkg/i18n/README.md) - Internationalization (i18n) support 🌟
+- [**pkg/utils**](pkg/utils/README.md) - Common utility functions 🌟
+- [**pkg/fcm**](pkg/fcm/README.md) - Firebase Cloud Messaging 🌟
+- [pkg/logger](pkg/logger/README.md) - Structured logging
+- [pkg/cache](pkg/cache/README.md) - Redis caching utilities
 
 ## 🛣️ API Endpoints
 

@@ -2,7 +2,8 @@ package user
 
 import (
 	model "anhnq/api-core/internal/models"
-	"anhnq/api-core/pkg/logger"
+	"anhnq/api-core/pkg/i18n"
+	"anhnq/api-core/pkg/response"
 	"encoding/json"
 	"net/http"
 
@@ -20,111 +21,81 @@ func NewHandler(svc *Service) *Handler {
 
 // Index - GET /users
 func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
-	logger.RequestLog(r, "Fetching all users")
+	lang := i18n.GetLanguageFromContext(r.Context())
 
 	users, err := h.service.GetAll()
 	if err != nil {
-		logger.ErrorLog(r, err, "Failed to fetch users")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response.InternalServerError(w, lang, response.CodeInternalServerError)
 		return
 	}
 
-	logger.RequestLogWithFields(r, "Users fetched successfully", map[string]interface{}{
-		"count": len(users),
-	})
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(users)
+	response.Success(w, lang, response.CodeSuccess, users)
 }
 
 // Show - GET /users/{id}
 func (h *Handler) Show(w http.ResponseWriter, r *http.Request) {
+	lang := i18n.GetLanguageFromContext(r.Context())
 	id := chi.URLParam(r, "id")
-	logger.RequestLogWithFields(r, "Fetching user by ID", map[string]interface{}{
-		"user_id": id,
-	})
 
 	user, err := h.service.GetByID(id)
 	if err != nil {
-		logger.ErrorLog(r, err, "User not found")
-		http.Error(w, err.Error(), http.StatusNotFound)
+		response.NotFound(w, lang, response.CodeUserNotFound)
 		return
 	}
 
-	logger.RequestLog(r, "User fetched successfully")
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+	response.Success(w, lang, response.CodeSuccess, user)
 }
 
 // Store - POST /users
 func (h *Handler) Store(w http.ResponseWriter, r *http.Request) {
-	logger.RequestLog(r, "Creating new user")
+	lang := i18n.GetLanguageFromContext(r.Context())
 
 	var u model.User
 	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
-		logger.ErrorLog(r, err, "Invalid request body")
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response.BadRequest(w, lang, response.CodeInvalidInput, nil)
 		return
 	}
 
 	created, err := h.service.Create(u)
 	if err != nil {
-		logger.ErrorLog(r, err, "Failed to create user")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response.InternalServerError(w, lang, response.CodeInternalServerError)
 		return
 	}
 
-	logger.RequestLogWithFields(r, "User created successfully", map[string]interface{}{
-		"user_id": created.ID,
-		"email":   created.Email,
-	})
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(created)
+	response.Created(w, lang, response.CodeCreated, created)
 }
 
 // Update - PUT /users/{id}
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+	lang := i18n.GetLanguageFromContext(r.Context())
 	id := chi.URLParam(r, "id")
-	logger.RequestLogWithFields(r, "Updating user", map[string]interface{}{
-		"user_id": id,
-	})
 
 	var u model.User
 	if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
-		logger.ErrorLog(r, err, "Invalid request body")
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		response.BadRequest(w, lang, response.CodeInvalidInput, nil)
 		return
 	}
 
 	updated, err := h.service.Update(id, u)
 	if err != nil {
-		logger.ErrorLog(r, err, "Failed to update user")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response.InternalServerError(w, lang, response.CodeInternalServerError)
 		return
 	}
 
-	logger.RequestLog(r, "User updated successfully")
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updated)
+	response.Success(w, lang, response.CodeUpdated, updated)
 }
 
 // Destroy - DELETE /users/{id}
 func (h *Handler) Destroy(w http.ResponseWriter, r *http.Request) {
+	lang := i18n.GetLanguageFromContext(r.Context())
 	id := chi.URLParam(r, "id")
-	logger.RequestLogWithFields(r, "Deleting user", map[string]interface{}{
-		"user_id": id,
-	})
 
 	if err := h.service.Delete(id); err != nil {
-		logger.ErrorLog(r, err, "Failed to delete user")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response.InternalServerError(w, lang, response.CodeInternalServerError)
 		return
 	}
 
-	logger.RequestLog(r, "User deleted successfully")
-	w.WriteHeader(http.StatusNoContent)
+	response.Success(w, lang, response.CodeDeleted, nil)
 }
 
 // Options - OPTIONS /users

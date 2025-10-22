@@ -57,6 +57,8 @@ __debug_bin
 
 # Air (live reload) temp files
 tmp/
+.air.toml.bak
+build-errors.log
 
 # Node (nếu có frontend)
 node_modules/
