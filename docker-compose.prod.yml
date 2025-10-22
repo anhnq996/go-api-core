@@ -1,0 +1,143 @@
+version: "3.8"
+
+services:
+  # API Application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: apicore-api
+    ports:
+      - "3000:3000"
+    environment:
+      # Database
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: apicore
+      DB_SSLMODE: disable
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: 0
+
+      # Server
+      SERVER_PORT: 3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: apicore-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: apicore-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: apicore
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Loki - Log aggregation (optional)
+  loki:
+    image: grafana/loki:latest
+    container_name: apicore-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki-data:/loki
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  # Grafana - Monitoring (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: apicore-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /etc/grafana/provisioning/datasources
+        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+        apiVersion: 1
+        datasources:
+        - name: Loki
+          type: loki
+          access: proxy
+          orgId: 1
+          url: http://loki:3100
+          basicAuth: false
+          isDefault: true
+          version: 1
+          editable: false
+        EOF
+        /run.sh
+    networks:
+      - monitoring
+    restart: unless-stopped
+    depends_on:
+      - loki
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  loki-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+networks:
+  monitoring:
+    driver: bridge

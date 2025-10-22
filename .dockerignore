@@ -1,0 +1,76 @@
+# Git
+.git
+.gitignore
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Test files
+*_test.go
+**/*_test.go
+coverage.txt
+*.out
+
+# Logs
+storages/logs/*.log
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Docker
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+.dockerignore
+
+# Documentation (không cần trong image)
+*.md
+!README.md
+docs/*.md
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Node modules (nếu có frontend)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Go specific
+vendor/
+
+# Config files (sẽ mount từ host)
+config/*.yaml
+config/*.yml
+!config/database.go
+!config/cache.go
+
+# Scripts
+scripts/
+
+# Development files
+.air.toml
+Makefile
+

@@ -1,0 +1,94 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+apicore
+bin/
+dist/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.txt
+
+# Go workspace file
+go.work
+
+# Dependency directories
+vendor/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+storages/logs/*.log
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Build artifacts
+__debug_bin
+
+# Air (live reload) temp files
+tmp/
+
+# Node (nếu có frontend)
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Docker volumes data (local development)
+.docker/
+docker-data/
+
+# Generated files
+internal/wire/wire_gen.go
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Security
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+credentials/
+
+# Local config overrides
+config/local.yaml
+config/local.yml
+
+# Go sum backup
+go.sum.backup
+
