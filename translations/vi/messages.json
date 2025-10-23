@@ -1,0 +1,22 @@
+{
+  "welcome": "Chào mừng đến với ứng dụng của chúng tôi",
+  "goodbye": "Cảm ơn bạn đã sử dụng ứng dụng của chúng tôi",
+  "loading": "Đang tải...",
+  "saving": "Đang lưu...",
+  "deleting": "Đang xóa...",
+  "confirm_delete": "Bạn có chắc chắn muốn xóa mục này?",
+  "operation_success": "Thao tác hoàn thành thành công",
+  "operation_failed": "Thao tác thất bại",
+  "no_data_found": "Không tìm thấy dữ liệu",
+  "search_placeholder": "Tìm kiếm...",
+  "select_placeholder": "Vui lòng chọn một tùy chọn",
+  "upload_success": "Tải tệp lên thành công",
+  "upload_failed": "Tải tệp lên thất bại",
+  "export_success": "Xuất dữ liệu thành công",
+  "import_success": "Nhập dữ liệu thành công",
+  "import_failed": "Nhập dữ liệu thất bại",
+  "connection_error": "Lỗi kết nối",
+  "server_error": "Lỗi máy chủ",
+  "maintenance_mode": "Hệ thống đang bảo trì",
+  "feature_coming_soon": "Tính năng này sắp ra mắt"
+}

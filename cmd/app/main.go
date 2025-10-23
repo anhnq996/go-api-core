@@ -11,6 +11,7 @@ import (
 	"anhnq/api-core/pkg/cache"
 	"anhnq/api-core/pkg/i18n"
 	"anhnq/api-core/pkg/logger"
+	"anhnq/api-core/pkg/validator"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -41,6 +42,10 @@ func main() {
 	} else {
 		logger.Info("I18n initialized successfully")
 	}
+
+	// Khởi tạo validation messages với i18n
+	validator.InitValidationMessages(i18n.GetTranslator())
+	logger.Info("Validation messages initialized successfully")
 
 	// Kết nối database
 	dbConfig := config.GetDefaultDatabaseConfig()

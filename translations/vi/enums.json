@@ -1,0 +1,34 @@
+{
+  "user_status": {
+    "active": "Hoạt động",
+    "inactive": "Không hoạt động",
+    "pending": "Chờ duyệt",
+    "suspended": "Tạm khóa"
+  },
+  "user_role": {
+    "admin": "Quản trị viên",
+    "moderator": "Điều hành viên",
+    "user": "Người dùng",
+    "guest": "Khách"
+  },
+  "order_status": {
+    "pending": "Chờ xử lý",
+    "processing": "Đang xử lý",
+    "shipped": "Đã gửi hàng",
+    "delivered": "Đã giao hàng",
+    "cancelled": "Đã hủy",
+    "refunded": "Đã hoàn tiền"
+  },
+  "payment_status": {
+    "pending": "Chờ thanh toán",
+    "paid": "Đã thanh toán",
+    "failed": "Thanh toán thất bại",
+    "refunded": "Đã hoàn tiền"
+  },
+  "notification_type": {
+    "info": "Thông tin",
+    "success": "Thành công",
+    "warning": "Cảnh báo",
+    "error": "Lỗi"
+  }
+}

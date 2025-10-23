@@ -1,0 +1,34 @@
+{
+  "user_status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "suspended": "Suspended"
+  },
+  "user_role": {
+    "admin": "Administrator",
+    "moderator": "Moderator",
+    "user": "User",
+    "guest": "Guest"
+  },
+  "order_status": {
+    "pending": "Pending",
+    "processing": "Processing",
+    "shipped": "Shipped",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "refunded": "Refunded"
+  },
+  "payment_status": {
+    "pending": "Pending",
+    "paid": "Paid",
+    "failed": "Failed",
+    "refunded": "Refunded"
+  },
+  "notification_type": {
+    "info": "Information",
+    "success": "Success",
+    "warning": "Warning",
+    "error": "Error"
+  }
+}

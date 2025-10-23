@@ -1,0 +1,22 @@
+{
+  "welcome": "Welcome to our application",
+  "goodbye": "Thank you for using our application",
+  "loading": "Loading...",
+  "saving": "Saving...",
+  "deleting": "Deleting...",
+  "confirm_delete": "Are you sure you want to delete this item?",
+  "operation_success": "Operation completed successfully",
+  "operation_failed": "Operation failed",
+  "no_data_found": "No data found",
+  "search_placeholder": "Search...",
+  "select_placeholder": "Please select an option",
+  "upload_success": "File uploaded successfully",
+  "upload_failed": "File upload failed",
+  "export_success": "Data exported successfully",
+  "import_success": "Data imported successfully",
+  "import_failed": "Data import failed",
+  "connection_error": "Connection error occurred",
+  "server_error": "Server error occurred",
+  "maintenance_mode": "System is under maintenance",
+  "feature_coming_soon": "This feature is coming soon"
+}

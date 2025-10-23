@@ -62,7 +62,7 @@ func ValidateAndRespond(w http.ResponseWriter, r *http.Request, data interface{}
 		// Empty body error
 		if strings.Contains(err.Error(), "empty") {
 			emptyBodyErrors := ValidationErrorsMap{
-				"body": []string{"Request body là bắt buộc"},
+				"body": []string{GetEmptyBodyMessage(lang)},
 			}
 			response.ValidationError(w, lang, response.CodeValidationFailed, emptyBodyErrors)
 			return false
@@ -71,14 +71,14 @@ func ValidateAndRespond(w http.ResponseWriter, r *http.Request, data interface{}
 		// Invalid JSON error
 		if strings.Contains(err.Error(), "JSON") {
 			invalidJSONErrors := ValidationErrorsMap{
-				"body": []string{"Dữ liệu đầu vào không hợp lệ"},
+				"body": []string{GetInvalidJSONMessage(lang)},
 			}
 			response.ValidationError(w, lang, response.CodeValidationFailed, invalidJSONErrors)
 			return false
 		}
 
 		// Validation errors
-		validationErrors := ParseValidationErrors(err)
+		validationErrors := ParseValidationErrors(lang, err)
 		if len(validationErrors) > 0 {
 			response.ValidationError(w, lang, response.CodeValidationFailed, validationErrors)
 			return false
@@ -86,7 +86,7 @@ func ValidateAndRespond(w http.ResponseWriter, r *http.Request, data interface{}
 
 		// Unknown error - cũng trả về validation errors format
 		unknownErrors := ValidationErrorsMap{
-			"body": []string{"Dữ liệu đầu vào không hợp lệ"},
+			"body": []string{GetInvalidJSONMessage(lang)},
 		}
 		response.ValidationError(w, lang, response.CodeValidationFailed, unknownErrors)
 		return false
@@ -99,13 +99,13 @@ func ValidateAndRespond(w http.ResponseWriter, r *http.Request, data interface{}
 type ValidationErrorsMap map[string][]string
 
 // ParseValidationErrors chuyển validator errors thành ValidationErrorsMap
-func ParseValidationErrors(err error) ValidationErrorsMap {
+func ParseValidationErrors(lang string, err error) ValidationErrorsMap {
 	errorsMap := make(ValidationErrorsMap)
 
 	if validationErrors, ok := err.(validator.ValidationErrors); ok {
 		for _, e := range validationErrors {
 			field := e.Field()
-			message := GetErrorMessage(e)
+			message := GetErrorMessage(lang, e)
 
 			// Nếu field đã tồn tại, append message vào slice
 			if messages, exists := errorsMap[field]; exists {
@@ -119,71 +119,9 @@ func ParseValidationErrors(err error) ValidationErrorsMap {
 	return errorsMap
 }
 
-// GetErrorMessage trả về error message tiếng Việt dựa trên validation tag
-func GetErrorMessage(e validator.FieldError) string {
-	field := e.Field()
-
-	// Map field names to Vietnamese
-	fieldNames := map[string]string{
-		"email":    "Email",
-		"password": "Mật khẩu",
-		"name":     "Tên",
-		"phone":    "Số điện thoại",
-		"avatar":   "Ảnh đại diện",
-	}
-
-	// Get Vietnamese field name
-	viField := fieldNames[field]
-	if viField == "" {
-		viField = field
-	}
-
-	switch e.Tag() {
-	case "required":
-		return fmt.Sprintf("%s là bắt buộc", viField)
-	case "email":
-		return fmt.Sprintf("%s không đúng định dạng", viField)
-	case "min":
-		return fmt.Sprintf("%s phải có ít nhất %s ký tự", viField, e.Param())
-	case "max":
-		return fmt.Sprintf("%s không được vượt quá %s ký tự", viField, e.Param())
-	case "len":
-		return fmt.Sprintf("%s phải có đúng %s ký tự", viField, e.Param())
-	case "gte":
-		return fmt.Sprintf("%s phải lớn hơn hoặc bằng %s", viField, e.Param())
-	case "lte":
-		return fmt.Sprintf("%s phải nhỏ hơn hoặc bằng %s", viField, e.Param())
-	case "gt":
-		return fmt.Sprintf("%s phải lớn hơn %s", viField, e.Param())
-	case "lt":
-		return fmt.Sprintf("%s phải nhỏ hơn %s", viField, e.Param())
-	case "eqfield":
-		return fmt.Sprintf("%s phải bằng %s", viField, e.Param())
-	case "nefield":
-		return fmt.Sprintf("%s không được bằng %s", viField, e.Param())
-	case "alpha":
-		return fmt.Sprintf("%s chỉ được chứa chữ cái", viField)
-	case "alphanum":
-		return fmt.Sprintf("%s chỉ được chứa chữ cái và số", viField)
-	case "numeric":
-		return fmt.Sprintf("%s phải là số", viField)
-	case "url":
-		return fmt.Sprintf("%s phải là URL hợp lệ", viField)
-	case "uri":
-		return fmt.Sprintf("%s phải là URI hợp lệ", viField)
-	case "uuid":
-		return fmt.Sprintf("%s phải là UUID hợp lệ", viField)
-	case "oneof":
-		return fmt.Sprintf("%s phải là một trong: %s", viField, e.Param())
-	case "unique":
-		return fmt.Sprintf("%s phải là duy nhất", viField)
-	case "phone":
-		return fmt.Sprintf("%s phải là số điện thoại hợp lệ", viField)
-	case "strongpassword":
-		return fmt.Sprintf("%s phải chứa chữ hoa, chữ thường, số và ký tự đặc biệt", viField)
-	default:
-		return fmt.Sprintf("%s không hợp lệ", viField)
-	}
+// GetErrorMessage trả về error message đa ngôn ngữ dựa trên validation tag
+func GetErrorMessage(lang string, e validator.FieldError) string {
+	return GetValidationMessage(lang, e)
 }
 
 // registerCustomValidators đăng ký custom validators

@@ -1,0 +1,19 @@
+{
+  "email": "Email",
+  "password": "Password",
+  "name": "Name",
+  "phone": "Phone number",
+  "avatar": "Avatar",
+  "role_id": "Role",
+  "is_active": "Active status",
+  "created_at": "Created date",
+  "updated_at": "Updated date",
+  "last_login_at": "Last login",
+  "email_verified_at": "Email verified date",
+  "page": "Page number",
+  "per_page": "Items per page",
+  "sort": "Sort field",
+  "order": "Sort order",
+  "search": "Search",
+  "body": "Input data"
+}

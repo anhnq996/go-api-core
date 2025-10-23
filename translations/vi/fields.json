@@ -1,0 +1,19 @@
+{
+  "email": "Email",
+  "password": "Mật khẩu",
+  "name": "Tên",
+  "phone": "Số điện thoại",
+  "avatar": "Ảnh đại diện",
+  "role_id": "Vai trò",
+  "is_active": "Trạng thái hoạt động",
+  "created_at": "Ngày tạo",
+  "updated_at": "Ngày cập nhật",
+  "last_login_at": "Lần đăng nhập cuối",
+  "email_verified_at": "Ngày xác thực email",
+  "page": "Số trang",
+  "per_page": "Số lượng mỗi trang",
+  "sort": "Sắp xếp",
+  "order": "Thứ tự",
+  "search": "Tìm kiếm",
+  "body": "Dữ liệu đầu vào"
+}
