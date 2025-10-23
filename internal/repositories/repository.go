@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -26,6 +27,7 @@ type Repository[T any] interface {
 
 	// Pagination
 	Paginate(ctx context.Context, page, perPage int) ([]T, int64, error)
+	FindWithPagination(ctx context.Context, page, perPage int, sort, order, search string, searchFields []string) ([]T, int64, error)
 
 	// Bulk operations
 	BulkCreate(ctx context.Context, entities []T) error
@@ -140,6 +142,67 @@ func (r *BaseRepository[T]) Paginate(ctx context.Context, page, perPage int) ([]
 
 	offset := (page - 1) * perPage
 	err := r.db.WithContext(ctx).Offset(offset).Limit(perPage).Find(&entities).Error
+
+	return entities, total, err
+}
+
+// FindWithPagination phân trang với sort, order và search
+func (r *BaseRepository[T]) FindWithPagination(ctx context.Context, page, perPage int, sort, order, search string, searchFields []string) ([]T, int64, error) {
+	var entities []T
+	var total int64
+
+	// Set defaults
+	if page < 1 {
+		page = 1
+	}
+	if perPage < 1 {
+		perPage = 10
+	}
+	if perPage > 100 {
+		perPage = 100
+	}
+	if order == "" {
+		order = "asc"
+	}
+	if order != "asc" && order != "desc" {
+		order = "asc"
+	}
+
+	// Build query
+	query := r.db.WithContext(ctx).Model(new(T))
+
+	// Add search condition
+	if search != "" && len(searchFields) > 0 {
+		var conditions []string
+		var args []interface{}
+
+		for _, field := range searchFields {
+			conditions = append(conditions, field+" ILIKE ?")
+			args = append(args, "%"+search+"%")
+		}
+
+		if len(conditions) > 0 {
+			query = query.Where("("+strings.Join(conditions, " OR ")+")", args...)
+		}
+	}
+
+	// Count total
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Add sorting (chỉ sort nếu có truyền sort field)
+	if sort != "" {
+		sortField := sort
+		if order == "desc" {
+			sortField = sort + " DESC"
+		}
+		query = query.Order(sortField)
+	}
+
+	// Add pagination and execute
+	offset := (page - 1) * perPage
+	err := query.Offset(offset).Limit(perPage).Find(&entities).Error
 
 	return entities, total, err
 }

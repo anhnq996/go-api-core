@@ -78,6 +78,7 @@ func (m *Manager) MiddlewareWithBlacklist(blacklist *Blacklist) func(http.Handle
 
 			// Lấy token từ header
 			token := ExtractTokenFromHeader(r)
+			fmt.Println("token", token)
 			if token == "" {
 				response.Unauthorized(w, lang, response.CodeTokenMissing)
 				return

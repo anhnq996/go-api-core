@@ -4,6 +4,7 @@ import (
 	model "anhnq/api-core/internal/models"
 	repository "anhnq/api-core/internal/repositories"
 	"anhnq/api-core/pkg/cache"
+	"anhnq/api-core/pkg/utils"
 
 	"context"
 	"fmt"
@@ -120,4 +121,20 @@ func (s *Service) Delete(id string) error {
 	s.cache.Del(ctx, cacheKeyAll, fmt.Sprintf("user:%s", id))
 
 	return nil
+}
+
+// GetListWithPagination lấy danh sách users với pagination, sort và search
+func (s *Service) GetListWithPagination(page, perPage int, sort, order, search string) ([]model.User, *utils.Pagination, error) {
+	ctx := context.Background()
+
+	// Get users with pagination
+	users, total, err := s.repo.FindAllWithPaginationAndRole(ctx, page, perPage, sort, order, search)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Create pagination info
+	pagination := utils.NewPagination(page, perPage, total)
+
+	return users, pagination, nil
 }

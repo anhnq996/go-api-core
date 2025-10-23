@@ -6,6 +6,7 @@ import (
 	model "anhnq/api-core/internal/models"
 	"anhnq/api-core/pkg/i18n"
 	"anhnq/api-core/pkg/response"
+	"anhnq/api-core/pkg/utils"
 	"anhnq/api-core/pkg/validator"
 
 	"github.com/go-chi/chi/v5"
@@ -24,13 +25,20 @@ func NewHandler(svc *Service) *Handler {
 func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
 	lang := i18n.GetLanguageFromContext(r.Context())
 
-	users, err := h.service.GetAll()
+	// Parse query parameters using common function
+	params := utils.ParseQueryParams(r)
+
+	// Get users with pagination
+	users, pagination, err := h.service.GetListWithPagination(params.Page, params.PerPage, params.Sort, params.Order, params.Search)
 	if err != nil {
 		response.InternalServerError(w, lang, response.CodeInternalServerError)
 		return
 	}
 
-	response.Success(w, lang, response.CodeSuccess, users)
+	// Create response data using common helper
+	responseData := utils.PaginatedResponse(users, pagination)
+
+	response.Success(w, lang, response.CodeSuccess, responseData)
 }
 
 // Show - GET /users/{id}

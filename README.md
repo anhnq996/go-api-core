@@ -37,16 +37,13 @@ go run cmd/migrate/main.go version  # Check version
 - ✅ PostgreSQL database với GORM
 - ✅ Redis caching với Remember pattern
 - ✅ Database migrations với golang-migrate
-- ✅ Distributed locking
 - ✅ Swagger/OpenAPI documentation
 - ✅ Interactive API documentation với Swagger UI
 - ✅ Structured logging với zerolog
 - ✅ Request/response logging middleware
-- ✅ **Standardized REST API Response format**
 - ✅ **Multi-language support (i18n) - EN/VI**
 - ✅ **JWT Authentication & Authorization**
 - ✅ **Role-based access control (RBAC)**
-- ✅ **Auto validation với struct tags**
 - ✅ **Generic Base Repository pattern**
 - ✅ **FCM (Firebase Cloud Messaging) integration**
 - ✅ **Hot reload với Air**
@@ -163,34 +160,6 @@ go run cmd/migrate/main.go seed
 go run cmd/app/main.go
 ```
 
-Server sẽ khởi động tại `http://localhost:3000`
-
-### Test API
-
-```bash
-# Health check
-curl http://localhost:3000/ping
-
-# Lấy danh sách users
-curl http://localhost:3000/api/v1/users
-
-# Tạo user mới
-curl -X POST http://localhost:3000/api/v1/users \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Nguyễn Văn A","email":"nguyenvana@example.com"}'
-
-# Lấy user theo ID
-curl http://localhost:3000/api/v1/users/{id}
-
-# Cập nhật user
-curl -X PUT http://localhost:3000/api/v1/users/{id} \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Nguyễn Văn B","email":"nguyenvanb@example.com"}'
-
-# Xóa user
-curl -X DELETE http://localhost:3000/api/v1/users/{id}
-```
-
 ## 📚 Documentation
 
 Truy cập documentation tại: **http://localhost:3000/docs**
@@ -205,14 +174,7 @@ Truy cập documentation tại: **http://localhost:3000/docs**
 
 ### Hướng dẫn chi tiết
 
-- [**JWT Authentication Guide**](docs/jwt-guide.md) - Hướng dẫn JWT authentication 🌟
-- [**Validation Guide**](docs/validation-guide.md) - Hướng dẫn auto validation 🌟
 - [**Development Guide**](docs/development-guide.md) - Hướng dẫn phát triển
-- [Authentication Module](docs/AUTH_README.md) - Auth module documentation
-- [Routes Documentation](docs/routes.md) - Chi tiết về các API endpoints
-- [Swagger Guide](docs/swagger-guide.md) - Hướng dẫn sử dụng Swagger
-- [Docker Setup](DOCKER.md) - Hướng dẫn Docker
-- [Loki + Grafana Setup](docs/loki-grafana-setup.md) - Hướng dẫn setup logging
 
 ### Package Documentation
 
@@ -262,18 +224,6 @@ Wire tự động generate code để inject dependencies:
 - Repository → Service → Handler → Router
 
 Không cần khởi tạo thủ công từng dependency trong `main.go`.
-
-### Repository Pattern
-
-Sử dụng in-memory repository, dễ dàng chuyển sang database:
-
-```go
-// Hiện tại: In-memory
-userRepo := repository.NewUserRepository()
-
-// Tương lai: Database
-userRepo := repository.NewUserRepository(db)
-```
 
 ## 🔧 Thêm Module Mới
 
@@ -394,30 +344,6 @@ wire ./internal/wire
 ### Bước 6: Cập nhật Swagger documentation
 
 Thêm endpoints mới vào `docs/swagger.json`
-
-Chi tiết xem tại [docs/routes.md](docs/routes.md)
-
-## 🧪 Testing
-
-### Manual Testing với Swagger UI
-
-1. Truy cập http://localhost:3000/swagger
-2. Chọn endpoint muốn test
-3. Click "Try it out"
-4. Nhập parameters/body
-5. Click "Execute"
-
-### Testing với curl
-
-Xem phần "Test API" ở trên
-
-### Testing với Postman
-
-Import file `swagger.json` vào Postman:
-
-1. Mở Postman
-2. Import > Link > `http://localhost:3000/swagger.json`
-3. Test các endpoints
 
 ## 🛠️ Makefile Commands
 
@@ -727,18 +653,12 @@ make help             # Show available commands
 
 ## 📝 TODO
 
-- [x] ~~Thêm database support (PostgreSQL/MySQL)~~
-- [x] ~~Thêm Docker support~~
-- [x] ~~Thêm logging với structured logger (zerolog)~~
-- [ ] Thêm authentication & authorization (JWT)
-- [ ] Thêm validation với go-playground/validator
 - [ ] Thêm unit tests
 - [ ] Thêm integration tests
 - [ ] Thêm rate limiting với Redis
 - [ ] Thêm CORS support
 - [ ] Thêm CI/CD pipeline (GitHub Actions)
 - [ ] Thêm API versioning
-- [ ] Thêm pagination
 - [ ] Thêm filtering & sorting
 
 ## 🤝 Contributing

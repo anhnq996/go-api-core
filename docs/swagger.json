@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "ApiCore - User Management API",
-    "description": "API documentation cho hệ thống quản lý người dùng",
+    "title": "ApiCore - User Management & Authentication API",
+    "description": "API documentation cho hệ thống quản lý người dùng và xác thực",
     "version": "1.0.0",
     "contact": {
       "name": "API Support",
@@ -40,21 +40,98 @@
     },
     "/api/v1/users": {
       "get": {
-        "summary": "Lấy danh sách users",
-        "description": "Trả về danh sách tất cả users trong hệ thống",
+        "summary": "Lấy danh sách users với pagination và sort",
+        "description": "Trả về danh sách users với hỗ trợ phân trang, sắp xếp và tìm kiếm",
         "tags": [
           "Users"
         ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Số trang (mặc định: 1)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Số items mỗi trang (mặc định: 10, tối đa: 100)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Trường để sắp xếp (mặc định: name)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "name",
+                "email",
+                "created_at",
+                "updated_at"
+              ],
+              "default": "name"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "Thứ tự sắp xếp (mặc định: asc)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "asc"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Tìm kiếm trong name và email",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Danh sách users",
+            "description": "Danh sách users với pagination",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/User"
-                  }
+                  "$ref": "#/components/schemas/UserListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ hoặc đã hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -76,6 +153,11 @@
         "description": "Tạo một user mới trong hệ thống",
         "tags": [
           "Users"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
         ],
         "requestBody": {
           "required": true,
@@ -103,6 +185,16 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ hoặc đã hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
                   "$ref": "#/components/schemas/Error"
                 }
               }
@@ -127,6 +219,11 @@
         "description": "Trả về thông tin chi tiết của một user",
         "tags": [
           "Users"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
         ],
         "parameters": [
           {
@@ -177,6 +274,11 @@
         "description": "Cập nhật thông tin của một user",
         "tags": [
           "Users"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
         ],
         "parameters": [
           {
@@ -248,6 +350,11 @@
         "tags": [
           "Users"
         ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -265,6 +372,327 @@
           },
           "404": {
             "description": "Không tìm thấy user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "summary": "Đăng nhập",
+        "description": "Đăng nhập vào hệ thống với email và password",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Đăng nhập thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thông tin đăng nhập không chính xác",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "summary": "Đăng ký tài khoản",
+        "description": "Tạo tài khoản mới trong hệ thống",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Đăng ký thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email đã tồn tại",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "summary": "Làm mới token",
+        "description": "Làm mới access token bằng refresh token",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token được làm mới thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refresh token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "summary": "Lấy thông tin user hiện tại",
+        "description": "Lấy thông tin chi tiết của user đang đăng nhập",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Thông tin user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ hoặc đã hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "summary": "Đăng xuất",
+        "description": "Đăng xuất khỏi hệ thống và vô hiệu hóa token hiện tại",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Đăng xuất thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Lỗi server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout-all": {
+      "post": {
+        "summary": "Đăng xuất tất cả thiết bị",
+        "description": "Đăng xuất khỏi tất cả thiết bị và vô hiệu hóa tất cả token",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Đăng xuất tất cả thiết bị thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ",
             "content": {
               "application/json": {
                 "schema": {
@@ -308,6 +736,25 @@
             "description": "Email của user",
             "example": "nguyenvana@example.com"
           },
+          "avatar": {
+            "type": "string",
+            "description": "URL avatar của user",
+            "example": "https://example.com/avatar.jpg"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "Trạng thái hoạt động của user",
+            "example": true
+          },
+          "last_login_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Thời gian đăng nhập lần cuối",
+            "example": "2025-10-21T14:12:00Z"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -325,8 +772,70 @@
           "id",
           "name",
           "email",
+          "is_active",
           "created_at",
           "updated_at"
+        ]
+      },
+      "Role": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID duy nhất của role",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
+          },
+          "name": {
+            "type": "string",
+            "description": "Tên role",
+            "example": "admin"
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Tên hiển thị của role",
+            "example": "Administrator"
+          },
+          "description": {
+            "type": "string",
+            "description": "Mô tả role",
+            "example": "Full system access with all permissions"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "display_name"
+        ]
+      },
+      "Permission": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID duy nhất của permission",
+            "example": "550e8400-e29b-41d4-a716-446655440002"
+          },
+          "name": {
+            "type": "string",
+            "description": "Tên permission",
+            "example": "users.view"
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Tên hiển thị của permission",
+            "example": "View Users"
+          },
+          "module": {
+            "type": "string",
+            "description": "Module của permission",
+            "example": "users"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "display_name",
+          "module"
         ]
       },
       "UserInput": {
@@ -342,22 +851,509 @@
             "format": "email",
             "description": "Email của user",
             "example": "nguyenvana@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Mật khẩu của user",
+            "example": "Password123!"
+          },
+          "role_id": {
+            "type": "string",
+            "description": "ID của role",
+            "example": "550e8400-e29b-41d4-a716-446655440001"
           }
         },
         "required": [
           "name",
-          "email"
+          "email",
+          "password"
+        ]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email của user",
+            "example": "admin@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Mật khẩu của user",
+            "example": "Password123!"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Trạng thái thành công",
+            "example": true
+          },
+          "code": {
+            "type": "string",
+            "description": "Mã response",
+            "example": "LOGIN_SUCCESS"
+          },
+          "message": {
+            "type": "object",
+            "description": "Thông báo đa ngôn ngữ",
+            "properties": {
+              "en": {
+                "type": "string",
+                "example": "Login successful"
+              },
+              "vi": {
+                "type": "string",
+                "example": "Đăng nhập thành công"
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/User"
+              },
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Danh sách permissions của user",
+                "example": [
+                  "users.view",
+                  "users.create",
+                  "users.update",
+                  "users.delete"
+                ]
+              },
+              "access_token": {
+                "type": "string",
+                "description": "Access token",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "refresh_token": {
+                "type": "string",
+                "description": "Refresh token",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "expires_in": {
+                "type": "integer",
+                "description": "Thời gian hết hạn (giây)",
+                "example": 3600
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "code",
+          "message",
+          "data"
+        ]
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Tên của user",
+            "example": "Nguyễn Văn A"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email của user",
+            "example": "nguyenvana@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Mật khẩu của user",
+            "example": "Password123!"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ]
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Trạng thái thành công",
+            "example": true
+          },
+          "code": {
+            "type": "string",
+            "description": "Mã response",
+            "example": "REGISTER_SUCCESS"
+          },
+          "message": {
+            "type": "object",
+            "description": "Thông báo đa ngôn ngữ",
+            "properties": {
+              "en": {
+                "type": "string",
+                "example": "Registration successful"
+              },
+              "vi": {
+                "type": "string",
+                "example": "Đăng ký thành công"
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "code",
+          "message",
+          "data"
+        ]
+      },
+      "RefreshTokenRequest": {
+        "type": "object",
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "description": "Refresh token",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        },
+        "required": [
+          "refresh_token"
+        ]
+      },
+      "RefreshTokenResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Trạng thái thành công",
+            "example": true
+          },
+          "code": {
+            "type": "string",
+            "description": "Mã response",
+            "example": "TOKEN_REFRESHED"
+          },
+          "message": {
+            "type": "object",
+            "description": "Thông báo đa ngôn ngữ",
+            "properties": {
+              "en": {
+                "type": "string",
+                "example": "Token refreshed successfully"
+              },
+              "vi": {
+                "type": "string",
+                "example": "Token đã được làm mới thành công"
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string",
+                "description": "Access token mới",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "expires_in": {
+                "type": "integer",
+                "description": "Thời gian hết hạn (giây)",
+                "example": 3600
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "code",
+          "message",
+          "data"
+        ]
+      },
+      "MeResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Trạng thái thành công",
+            "example": true
+          },
+          "code": {
+            "type": "string",
+            "description": "Mã response",
+            "example": "USER_INFO_RETRIEVED"
+          },
+          "message": {
+            "type": "object",
+            "description": "Thông báo đa ngôn ngữ",
+            "properties": {
+              "en": {
+                "type": "string",
+                "example": "User information retrieved successfully"
+              },
+              "vi": {
+                "type": "string",
+                "example": "Lấy thông tin user thành công"
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/User"
+              },
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Danh sách permissions của user",
+                "example": [
+                  "users.view",
+                  "users.create",
+                  "users.update",
+                  "users.delete"
+                ]
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "code",
+          "message",
+          "data"
+        ]
+      },
+      "LogoutResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Trạng thái thành công",
+            "example": true
+          },
+          "code": {
+            "type": "string",
+            "description": "Mã response",
+            "example": "LOGOUT_SUCCESS"
+          },
+          "message": {
+            "type": "object",
+            "description": "Thông báo đa ngôn ngữ",
+            "properties": {
+              "en": {
+                "type": "string",
+                "example": "Logout successful"
+              },
+              "vi": {
+                "type": "string",
+                "example": "Đăng xuất thành công"
+              }
+            }
+          }
+        },
+        "required": [
+          "success",
+          "code",
+          "message"
         ]
       },
       "Error": {
         "type": "object",
         "properties": {
-          "error": {
+          "success": {
+            "type": "boolean",
+            "description": "Trạng thái thành công",
+            "example": false
+          },
+          "code": {
             "type": "string",
-            "description": "Mô tả lỗi",
-            "example": "User not found"
+            "description": "Mã lỗi",
+            "example": "INVALID_CREDENTIALS"
+          },
+          "message": {
+            "type": "object",
+            "description": "Thông báo lỗi đa ngôn ngữ",
+            "properties": {
+              "en": {
+                "type": "string",
+                "example": "Invalid credentials"
+              },
+              "vi": {
+                "type": "string",
+                "example": "Thông tin đăng nhập không chính xác"
+              }
+            }
           }
-        }
+        },
+        "required": [
+          "success",
+          "code",
+          "message"
+        ]
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Trạng thái thành công",
+            "example": false
+          },
+          "code": {
+            "type": "string",
+            "description": "Mã lỗi",
+            "example": "VALIDATION_ERROR"
+          },
+          "message": {
+            "type": "object",
+            "description": "Thông báo lỗi đa ngôn ngữ",
+            "properties": {
+              "en": {
+                "type": "string",
+                "example": "Validation failed"
+              },
+              "vi": {
+                "type": "string",
+                "example": "Dữ liệu không hợp lệ"
+              }
+            }
+          },
+          "errors": {
+            "type": "object",
+            "description": "Chi tiết lỗi validation cho từng field",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "example": {
+              "email": [
+                "Email is required",
+                "Email format is invalid"
+              ],
+              "password": [
+                "Password is required",
+                "Password must be at least 8 characters"
+              ]
+            }
+          }
+        },
+        "required": [
+          "success",
+          "code",
+          "message",
+          "errors"
+        ]
+      },
+      "UserListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Trạng thái thành công",
+            "example": true
+          },
+          "code": {
+            "type": "string",
+            "description": "Mã response",
+            "example": "SUCCESS"
+          },
+          "message": {
+            "type": "string",
+            "description": "Thông báo",
+            "example": "Thành công"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/User"
+                },
+                "description": "Danh sách users"
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/Pagination"
+              }
+            },
+            "required": [
+              "items",
+              "pagination"
+            ]
+          }
+        },
+        "required": [
+          "success",
+          "code",
+          "message",
+          "data"
+        ]
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "description": "Trang hiện tại",
+            "example": 1
+          },
+          "per_page": {
+            "type": "integer",
+            "description": "Số items mỗi trang",
+            "example": 10
+          },
+          "total": {
+            "type": "integer",
+            "description": "Tổng số items",
+            "example": 25
+          },
+          "total_pages": {
+            "type": "integer",
+            "description": "Tổng số trang",
+            "example": 3
+          }
+        },
+        "required": [
+          "page",
+          "per_page",
+          "total",
+          "total_pages"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token để xác thực. Format: Bearer <token>"
       }
     }
   },
@@ -369,6 +1365,10 @@
     {
       "name": "Users",
       "description": "Quản lý người dùng"
+    },
+    {
+      "name": "Authentication",
+      "description": "Xác thực và phân quyền"
     }
   ]
 }

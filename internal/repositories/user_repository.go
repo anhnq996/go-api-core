@@ -17,6 +17,7 @@ type UserRepository interface {
 	FindByEmail(ctx context.Context, email string) (*model.User, error)
 	FindWithRole(ctx context.Context, id uuid.UUID) (*model.User, error)
 	FindAllWithRole(ctx context.Context) ([]model.User, error)
+	FindAllWithPaginationAndRole(ctx context.Context, page, perPage int, sort, order, search string) ([]model.User, int64, error)
 }
 
 // userRepository implementation
@@ -64,4 +65,58 @@ func (r *userRepository) FindAll(ctx context.Context) ([]model.User, error) {
 // Override FindByID để preload role by default
 func (r *userRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	return r.FindWithRole(ctx, id)
+}
+
+// FindAllWithPaginationAndRole lấy users với pagination, sort, search và preload role
+func (r *userRepository) FindAllWithPaginationAndRole(ctx context.Context, page, perPage int, sort, order, search string) ([]model.User, int64, error) {
+	var users []model.User
+	var total int64
+
+	// Set defaults
+	if page < 1 {
+		page = 1
+	}
+	if perPage < 1 {
+		perPage = 10
+	}
+	if perPage > 100 {
+		perPage = 100
+	}
+	if order == "" {
+		order = "asc"
+	}
+	if order != "asc" && order != "desc" {
+		order = "asc"
+	}
+
+	// Build query
+	query := r.db.WithContext(ctx).Model(&model.User{})
+
+	// Add search condition
+	if search != "" {
+		query = query.Where("name ILIKE ? OR email ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	// Count total
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Add sorting (chỉ sort nếu có truyền sort field)
+	if sort != "" {
+		sortField := sort
+		if order == "desc" {
+			sortField = sort + " DESC"
+		}
+		query = query.Order(sortField)
+	}
+
+	// Add pagination and execute with preload
+	offset := (page - 1) * perPage
+	err := query.Preload("Role").
+		Offset(offset).
+		Limit(perPage).
+		Find(&users).Error
+
+	return users, total, err
 }

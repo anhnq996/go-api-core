@@ -176,7 +176,7 @@ func Conflict(w http.ResponseWriter, lang, code string, statusCode ...int) {
 
 // ValidationError gửi validation error (422)
 // statusCode optional: nếu không truyền sẽ dùng 422
-func ValidationError(w http.ResponseWriter, lang, code string, errors []ErrorDetail, statusCode ...int) {
+func ValidationError(w http.ResponseWriter, lang, code string, errors interface{}, statusCode ...int) {
 	status := http.StatusUnprocessableEntity
 	if len(statusCode) > 0 {
 		status = statusCode[0]

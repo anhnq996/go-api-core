@@ -14,3 +14,12 @@ type UpdateUserRequest struct {
 	Email  string  `json:"email" validate:"omitempty,email"`
 	Avatar *string `json:"avatar" validate:"omitempty,url"`
 }
+
+// ListUserRequest request cho list users với pagination và sort
+type ListUserRequest struct {
+	Page    int    `json:"page" validate:"omitempty,min=1"`
+	PerPage int    `json:"per_page" validate:"omitempty,min=1,max=100"`
+	Sort    string `json:"sort" validate:"omitempty,oneof=name email created_at updated_at"`
+	Order   string `json:"order" validate:"omitempty,oneof=asc desc"`
+	Search  string `json:"search" validate:"omitempty,max=100"`
+}
