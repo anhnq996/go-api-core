@@ -101,11 +101,16 @@ func Middleware() func(next http.Handler) http.Handler {
 				logEvent = logEvent.Int("request_size", len(requestBody))
 			}
 
-			// Add response body if present and not too large
-			if ww.body.Len() > 0 && ww.body.Len() < 10000 {
-				logEvent = logEvent.
-					Str("response_body", ww.body.String()).
-					Int("response_size", ww.body.Len())
+			// Add response body if present and not too large and not binary
+			responseContentType := w.Header().Get("Content-Type")
+			if ww.body.Len() > 0 && !isBinaryContent(responseContentType) {
+				if ww.body.Len() < 10000 {
+					logEvent = logEvent.
+						Str("response_body", ww.body.String()).
+						Int("response_size", ww.body.Len())
+				} else {
+					logEvent = logEvent.Int("response_size", ww.body.Len())
+				}
 			} else if ww.body.Len() > 0 {
 				logEvent = logEvent.Int("response_size", ww.body.Len())
 			}
@@ -281,8 +286,9 @@ func MiddlewareWithConfig(config MiddlewareConfig) func(next http.Handler) http.
 				}
 			}
 
-			// Add response body if configured
-			if config.LogResponseBody && ww.body.Len() > 0 {
+			// Add response body if configured and not binary
+			responseContentType := w.Header().Get("Content-Type")
+			if config.LogResponseBody && ww.body.Len() > 0 && !isBinaryContent(responseContentType) {
 				if ww.body.Len() < config.MaxBodySize {
 					logEvent = logEvent.
 						Str("response_body", ww.body.String()).
@@ -292,6 +298,8 @@ func MiddlewareWithConfig(config MiddlewareConfig) func(next http.Handler) http.
 						Int("response_size", ww.body.Len()).
 						Str("response_body", "Body too large to log")
 				}
+			} else if config.LogResponseBody && ww.body.Len() > 0 {
+				logEvent = logEvent.Int("response_size", ww.body.Len())
 			}
 
 			// Add response content type
@@ -308,4 +316,36 @@ func MiddlewareWithConfig(config MiddlewareConfig) func(next http.Handler) http.
 			}
 		})
 	}
+}
+
+// isBinaryContent checks if content type is binary
+func isBinaryContent(contentType string) bool {
+	binaryTypes := []string{
+		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // Excel
+		"application/vnd.ms-excel", // Excel
+		"application/pdf",          // PDF
+		"image/",                   // Images
+		"video/",                   // Videos
+		"audio/",                   // Audio
+		"application/zip",          // ZIP
+		"application/octet-stream", // Binary
+		"application/x-",           // Binary applications
+		"text/csv",                 // CSV (can be large)
+	}
+
+	for _, binaryType := range binaryTypes {
+		if len(binaryType) > 0 && binaryType[len(binaryType)-1] == '/' {
+			// Check prefix for types like "image/", "video/"
+			if len(contentType) >= len(binaryType) && contentType[:len(binaryType)] == binaryType {
+				return true
+			}
+		} else {
+			// Exact match for specific types
+			if contentType == binaryType {
+				return true
+			}
+		}
+	}
+
+	return false
 }
