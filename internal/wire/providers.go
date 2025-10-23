@@ -4,8 +4,10 @@ import (
 	"os"
 	"time"
 
+	"anhnq/api-core/config"
 	"anhnq/api-core/pkg/cache"
 	"anhnq/api-core/pkg/jwt"
+	"anhnq/api-core/pkg/storage"
 )
 
 // ProvideJWTManager provides JWT manager
@@ -21,6 +23,12 @@ func ProvideJWTManager() *jwt.Manager {
 // ProvideJWTBlacklist provides JWT blacklist
 func ProvideJWTBlacklist(cacheClient cache.Cache) *jwt.Blacklist {
 	return jwt.NewBlacklist(cacheClient)
+}
+
+// ProvideStorageManager provides storage manager
+func ProvideStorageManager() (*storage.StorageManager, error) {
+	cfg := config.GetDefaultStorageConfig()
+	return storage.NewStorageManager(cfg)
 }
 
 func getEnv(key, defaultValue string) string {

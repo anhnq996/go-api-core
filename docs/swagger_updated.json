@@ -81,7 +81,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["name", "email", "created_at"]
+              "enum": [
+                "name",
+                "email",
+                "created_at"
+              ]
             }
           },
           {
@@ -91,7 +95,10 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["asc", "desc"],
+              "enum": [
+                "asc",
+                "desc"
+              ],
               "default": "asc"
             }
           },
@@ -171,7 +178,10 @@
                     "description": "File avatar (hình ảnh)"
                   }
                 },
-                "required": ["name", "email"]
+                "required": [
+                  "name",
+                  "email"
+                ]
               }
             }
           }
@@ -836,7 +846,10 @@
       },
       "LoginRequest": {
         "type": "object",
-        "required": ["email", "password"],
+        "required": [
+          "email",
+          "password"
+        ],
         "properties": {
           "email": {
             "type": "string",
@@ -889,7 +902,11 @@
       },
       "RegisterRequest": {
         "type": "object",
-        "required": ["name", "email", "password"],
+        "required": [
+          "name",
+          "email",
+          "password"
+        ],
         "properties": {
           "name": {
             "type": "string",
@@ -947,7 +964,9 @@
       },
       "RefreshTokenRequest": {
         "type": "object",
-        "required": ["refresh_token"],
+        "required": [
+          "refresh_token"
+        ],
         "properties": {
           "refresh_token": {
             "type": "string",

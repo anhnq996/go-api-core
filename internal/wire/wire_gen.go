@@ -9,24 +9,28 @@ package wire
 import (
 	"anhnq/api-core/internal/app/auth"
 	"anhnq/api-core/internal/app/user"
-	repository "anhnq/api-core/internal/repositories"
+	"anhnq/api-core/internal/repositories"
 	"anhnq/api-core/internal/routes"
 	"anhnq/api-core/pkg/cache"
-
 	"gorm.io/gorm"
 )
 
 // Injectors from wire.go:
 
-func InitializeApp(db *gorm.DB, cacheClient cache.Cache) *routes.Controllers {
+// InitializeApp khởi tạo toàn bộ ứng dụng với database và cache
+func InitializeApp(db *gorm.DB, cacheClient cache.Cache) (*routes.Controllers, error) {
+	userRepository := repository.NewUserRepository(db)
+	storageManager, err := ProvideStorageManager()
+	if err != nil {
+		return nil, err
+	}
+	service := user.NewService(userRepository, cacheClient, storageManager)
+	handler := user.NewHandler(service)
+	authRepository := repository.NewAuthRepository(db)
 	manager := ProvideJWTManager()
 	blacklist := ProvideJWTBlacklist(cacheClient)
-	userRepository := repository.NewUserRepository(db)
-	authRepository := repository.NewAuthRepository(db)
-	userService := user.NewService(userRepository, cacheClient)
-	handler := user.NewHandler(userService)
-	service := auth.NewService(authRepository, manager, blacklist)
-	authHandler := auth.NewHandler(service)
+	authService := auth.NewService(authRepository, manager, blacklist)
+	authHandler := auth.NewHandler(authService)
 	controllers := routes.NewControllers(handler, authHandler, manager, blacklist)
-	return controllers
+	return controllers, nil
 }

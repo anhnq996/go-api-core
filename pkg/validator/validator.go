@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"anhnq/api-core/pkg/i18n"
@@ -55,6 +56,20 @@ func ValidateRequest(r *http.Request, data interface{}) error {
 // ValidateAndRespond validates request và tự động response errors
 // Trả về true nếu validation pass, false nếu fail (đã response error)
 func ValidateAndRespond(w http.ResponseWriter, r *http.Request, data interface{}) bool {
+	// Check content type
+	contentType := r.Header.Get("Content-Type")
+
+	if strings.Contains(contentType, "multipart/form-data") {
+		// Handle multipart form data
+		return ValidateMultipartAndRespond(w, r, data)
+	} else {
+		// Handle JSON
+		return ValidateJSONAndRespond(w, r, data)
+	}
+}
+
+// ValidateJSONAndRespond validates JSON request và tự động response errors
+func ValidateJSONAndRespond(w http.ResponseWriter, r *http.Request, data interface{}) bool {
 	lang := i18n.GetLanguageFromContext(r.Context())
 
 	// Parse và validate
@@ -89,6 +104,32 @@ func ValidateAndRespond(w http.ResponseWriter, r *http.Request, data interface{}
 			"body": []string{GetInvalidJSONMessage(lang)},
 		}
 		response.ValidationError(w, lang, response.CodeValidationFailed, unknownErrors)
+		return false
+	}
+
+	return true
+}
+
+// ValidateMultipartAndRespond validates multipart form data và tự động response errors
+func ValidateMultipartAndRespond(w http.ResponseWriter, r *http.Request, data interface{}) bool {
+	lang := i18n.GetLanguageFromContext(r.Context())
+
+	// Parse multipart form (should already be parsed by controller)
+	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10MB max
+		response.BadRequest(w, lang, response.CodeBadRequest, nil)
+		return false
+	}
+
+	// Populate struct from form values
+	if err := populateStructFromForm(r, data); err != nil {
+		response.BadRequest(w, lang, response.CodeBadRequest, nil)
+		return false
+	}
+
+	// Validate struct
+	if err := Validate(data); err != nil {
+		validationErrors := ParseValidationErrors(lang, err)
+		response.ValidationError(w, lang, response.CodeValidationFailed, validationErrors)
 		return false
 	}
 
@@ -181,4 +222,91 @@ func registerCustomValidators() {
 // GetValidator trả về validator instance
 func GetValidator() *validator.Validate {
 	return validate
+}
+
+// populateStructFromForm populates struct from form values
+func populateStructFromForm(r *http.Request, data interface{}) error {
+	v := reflect.ValueOf(data)
+	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
+		return fmt.Errorf("data must be a pointer to struct")
+	}
+
+	v = v.Elem()
+	t := v.Type()
+
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		fieldType := t.Field(i)
+
+		// Get json tag
+		jsonTag := fieldType.Tag.Get("json")
+		if jsonTag == "" || jsonTag == "-" {
+			continue
+		}
+
+		// Remove omitempty and other options
+		fieldName := strings.Split(jsonTag, ",")[0]
+		if fieldName == "" {
+			continue
+		}
+
+		// Get form value
+		formValue := r.FormValue(fieldName)
+		if formValue == "" {
+			continue
+		}
+
+		// Set field value based on type
+		if err := setFieldValue(field, formValue); err != nil {
+			return fmt.Errorf("failed to set field %s: %w", fieldName, err)
+		}
+	}
+
+	return nil
+}
+
+// setFieldValue sets field value from string
+func setFieldValue(field reflect.Value, value string) error {
+	if !field.CanSet() {
+		return fmt.Errorf("field cannot be set")
+	}
+
+	switch field.Kind() {
+	case reflect.String:
+		field.SetString(value)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		intVal, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return err
+		}
+		field.SetInt(intVal)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		uintVal, err := strconv.ParseUint(value, 10, 64)
+		if err != nil {
+			return err
+		}
+		field.SetUint(uintVal)
+	case reflect.Float32, reflect.Float64:
+		floatVal, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return err
+		}
+		field.SetFloat(floatVal)
+	case reflect.Bool:
+		boolVal, err := strconv.ParseBool(value)
+		if err != nil {
+			return err
+		}
+		field.SetBool(boolVal)
+	case reflect.Ptr:
+		// Handle pointer types (like *string for optional fields)
+		if field.IsNil() {
+			field.Set(reflect.New(field.Type().Elem()))
+		}
+		return setFieldValue(field.Elem(), value)
+	default:
+		return fmt.Errorf("unsupported field type: %s", field.Kind())
+	}
+
+	return nil
 }

@@ -12,6 +12,8 @@ type QueryParams struct {
 	Sort    string `json:"sort"`
 	Order   string `json:"order"`
 	Search  string `json:"search"`
+	Offset  int    `json:"offset"`
+	Limit   int    `json:"limit"`
 }
 
 // ParseQueryParams parse query parameters từ HTTP request
@@ -41,6 +43,10 @@ func ParseQueryParams(r *http.Request) *QueryParams {
 		params.Order = "asc"
 	}
 
+	// Calculate offset and limit
+	params.Offset = (params.Page - 1) * params.PerPage
+	params.Limit = params.PerPage
+
 	return params
 }
 
@@ -51,6 +57,49 @@ func GetQueryParamString(r *http.Request, key string, defaultValue string) strin
 		return defaultValue
 	}
 	return value
+}
+
+// QueryParamsOptions options cho ParseQueryParamsFromOptions
+type QueryParamsOptions struct {
+	Page    int
+	PerPage int
+	Sort    string
+	Order   string
+	Search  string
+}
+
+// ParseQueryParamsFromOptions parse query parameters từ options
+func ParseQueryParamsFromOptions(options QueryParamsOptions) *QueryParams {
+	params := &QueryParams{
+		Page:    options.Page,
+		PerPage: options.PerPage,
+		Sort:    strings.TrimSpace(options.Sort),
+		Order:   strings.TrimSpace(options.Order),
+		Search:  strings.TrimSpace(options.Search),
+	}
+
+	// Validate và set defaults
+	if params.Page < 1 {
+		params.Page = 1
+	}
+	if params.PerPage < 1 {
+		params.PerPage = 10
+	}
+	if params.PerPage > 100 {
+		params.PerPage = 100
+	}
+	if params.Order == "" {
+		params.Order = "asc"
+	}
+	if params.Order != "asc" && params.Order != "desc" {
+		params.Order = "asc"
+	}
+
+	// Calculate offset and limit
+	params.Offset = (params.Page - 1) * params.PerPage
+	params.Limit = params.PerPage
+
+	return params
 }
 
 // PaginatedResponse tạo response data chung cho pagination

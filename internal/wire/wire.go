@@ -15,17 +15,20 @@ import (
 )
 
 // InitializeApp khởi tạo toàn bộ ứng dụng với database và cache
-func InitializeApp(db *gorm.DB, cacheClient cache.Cache) *routes.Controllers {
+func InitializeApp(db *gorm.DB, cacheClient cache.Cache) (*routes.Controllers, error) {
 	wire.Build(
 		// JWT
 		ProvideJWTManager,
 		ProvideJWTBlacklist,
 
+		// Storage
+		ProvideStorageManager,
+
 		// Repositories (cần DB)
 		repository.NewUserRepository,
 		repository.NewAuthRepository,
 
-		// Services (cần Repo + Cache)
+		// Services (cần Repo + Cache + Storage)
 		user.NewService,
 		auth.NewService,
 
@@ -37,5 +40,5 @@ func InitializeApp(db *gorm.DB, cacheClient cache.Cache) *routes.Controllers {
 		routes.NewControllers,
 	)
 
-	return nil // Wire sẽ thay thế dòng này
+	return nil, nil // Wire sẽ thay thế dòng này
 }

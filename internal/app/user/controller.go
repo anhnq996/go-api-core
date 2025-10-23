@@ -1,6 +1,7 @@
 package user
 
 import (
+	"mime/multipart"
 	"net/http"
 
 	model "anhnq/api-core/internal/models"
@@ -61,9 +62,16 @@ func (h *Handler) Store(w http.ResponseWriter, r *http.Request) {
 
 	var input CreateUserRequest
 
-	// Validate request
+	// Validate request (will parse multipart form if needed)
 	if !validator.ValidateAndRespond(w, r, &input) {
 		return
+	}
+
+	// Get avatar file if exists
+	var avatarFile *multipart.FileHeader
+	if file, fileHeader, err := r.FormFile("avatar"); err == nil {
+		file.Close() // Close the file handle
+		avatarFile = fileHeader
 	}
 
 	// Convert to model
@@ -72,7 +80,7 @@ func (h *Handler) Store(w http.ResponseWriter, r *http.Request) {
 		Email: input.Email,
 	}
 
-	created, err := h.service.Create(u)
+	created, err := h.service.Create(u, avatarFile)
 	if err != nil {
 		response.InternalServerError(w, lang, response.CodeInternalServerError)
 		return
@@ -88,9 +96,16 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	var input UpdateUserRequest
 
-	// Validate request
+	// Validate request (will parse multipart form if needed)
 	if !validator.ValidateAndRespond(w, r, &input) {
 		return
+	}
+
+	// Get avatar file if exists
+	var avatarFile *multipart.FileHeader
+	if file, fileHeader, err := r.FormFile("avatar"); err == nil {
+		file.Close() // Close the file handle
+		avatarFile = fileHeader
 	}
 
 	// Convert to model
@@ -100,7 +115,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		Avatar: input.Avatar,
 	}
 
-	updated, err := h.service.Update(id, u)
+	updated, err := h.service.Update(id, u, avatarFile)
 	if err != nil {
 		response.InternalServerError(w, lang, response.CodeInternalServerError)
 		return

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -9,15 +10,22 @@ import (
 	"anhnq/api-core/internal/routes"
 	"anhnq/api-core/internal/wire"
 	"anhnq/api-core/pkg/cache"
+	"anhnq/api-core/pkg/exception"
 	"anhnq/api-core/pkg/i18n"
 	"anhnq/api-core/pkg/logger"
 	"anhnq/api-core/pkg/validator"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Printf("Warning: Error loading .env file: %v", err)
+	}
+
 	// Khởi tạo logger
 	if err := logger.Init(logger.Config{
 		Level:        "debug",                 // debug, info, warn, error
@@ -67,17 +75,20 @@ func main() {
 	}
 
 	// Wire tự động khởi tạo tất cả dependencies
-	controllers := wire.InitializeApp(db, cacheClient)
+	controllers, err := wire.InitializeApp(db, cacheClient)
+	if err != nil {
+		log.Fatalf("Failed to initialize app: %v", err)
+	}
 	logger.Info("Dependencies initialized successfully")
 
 	// Khởi tạo router
 	r := chi.NewRouter()
 
 	// Middleware
-	r.Use(middleware.RequestID) // Tạo unique ID cho mỗi request
-	r.Use(middleware.Recoverer) // Recover từ panic
-	r.Use(logger.Middleware())  // Log requests/responses với đầy đủ thông tin
-	r.Use(i18n.Middleware)      // Tự động detect và set language vào context
+	r.Use(middleware.RequestID)         // Tạo unique ID cho mỗi request
+	r.Use(exception.RecoveryMiddleware) // Recover từ panic với custom exception handling
+	r.Use(logger.Middleware())          // Log requests/responses với đầy đủ thông tin
+	r.Use(i18n.Middleware)              // Tự động detect và set language vào context
 
 	// Health check endpoint
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
@@ -113,6 +124,12 @@ func main() {
 	// Static files in docs
 	r.Get("/docs/*", func(w http.ResponseWriter, r *http.Request) {
 		http.StripPrefix("/docs/", http.FileServer(docsDir)).ServeHTTP(w, r)
+	})
+
+	// Static files for storages (avatars, etc.)
+	storageDir := http.Dir(filepath.Join(workDir, "storages/app"))
+	r.Get("/storages/*", func(w http.ResponseWriter, r *http.Request) {
+		http.StripPrefix("/storages/", http.FileServer(storageDir)).ServeHTTP(w, r)
 	})
 
 	// Đăng ký tất cả routes
