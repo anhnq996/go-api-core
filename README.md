@@ -658,8 +658,6 @@ make help             # Show available commands
 - [ ] Thêm rate limiting với Redis
 - [ ] Thêm CORS support
 - [ ] Thêm CI/CD pipeline (GitHub Actions)
-- [ ] Thêm API versioning
-- [ ] Thêm filtering & sorting
 
 ## 🤝 Contributing
 

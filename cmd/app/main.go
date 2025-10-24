@@ -17,6 +17,8 @@ import (
 	"anhnq/api-core/pkg/exception"
 	"anhnq/api-core/pkg/i18n"
 	"anhnq/api-core/pkg/logger"
+	middlewarePkg "anhnq/api-core/pkg/middleware"
+	socketPkg "anhnq/api-core/pkg/socket"
 	"anhnq/api-core/pkg/validator"
 
 	"github.com/go-chi/chi/v5"
@@ -53,8 +55,11 @@ func main() {
 	// Initialize schedule manager
 	scheduleManager := initScheduleManager()
 
+	// Initialize socket hub
+	socketHub := initSocketHub()
+
 	// Setup router and routes
-	r := setupRouter(controllers)
+	r := setupRouter(controllers, socketHub)
 
 	// Start schedule manager
 	startScheduleManager(scheduleManager)
@@ -194,8 +199,19 @@ func initScheduleManager() *schedules.ScheduleManager {
 	return manager
 }
 
+// initSocketHub initializes the WebSocket hub
+func initSocketHub() *socketPkg.Hub {
+	hub := socketPkg.NewHub()
+
+	// Start the hub in a goroutine
+	go hub.Run()
+
+	logger.Info("WebSocket hub initialized successfully")
+	return hub
+}
+
 // setupRouter sets up the router and all routes
-func setupRouter(controllers *routes.Controllers) *chi.Mux {
+func setupRouter(controllers *routes.Controllers, socketHub *socketPkg.Hub) *chi.Mux {
 	r := chi.NewRouter()
 
 	// Middleware
@@ -203,6 +219,15 @@ func setupRouter(controllers *routes.Controllers) *chi.Mux {
 	r.Use(exception.RecoveryMiddleware) // Recover từ panic với custom exception handling
 	r.Use(logger.Middleware())          // Log requests/responses với đầy đủ thông tin
 	r.Use(i18n.Middleware)              // Tự động detect và set language vào context
+
+	// Custom headers middleware
+	r.Use(middlewarePkg.CORSHeaders())     // CORS headers
+	r.Use(middlewarePkg.SecurityHeaders()) // Security headers
+
+	// Custom headers for specific endpoints
+	r.Use(middlewarePkg.CustomHeaders(map[string]string{
+		// Headers will be set from environment variables
+	}))
 
 	// Setup documentation routes
 	setupDocumentationRoutes(r)
@@ -212,6 +237,9 @@ func setupRouter(controllers *routes.Controllers) *chi.Mux {
 
 	// Register all API routes
 	routes.RegisterRoutes(r, controllers)
+
+	// Register WebSocket routes
+	socketPkg.RegisterRoutes(r, socketHub)
 
 	return r
 }
@@ -257,6 +285,11 @@ func setupStaticFileRoutes(r *chi.Mux) {
 	r.Get("/storages/*", func(w http.ResponseWriter, r *http.Request) {
 		http.StripPrefix("/storages/", http.FileServer(storageDir)).ServeHTTP(w, r)
 	})
+
+	// WebSocket test page
+	r.Get("/test-socket", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filepath.Join(workDir, "examples", "test_socket.html"))
+	})
 }
 
 // startScheduleManager starts the schedule manager
@@ -281,6 +314,8 @@ func startServer(r *chi.Mux) {
 	logger.Info("Server starting on :3000")
 	logger.Info("Documentation: http://localhost:3000/docs")
 	logger.Info("Swagger UI: http://localhost:3000/swagger")
+	logger.Info("WebSocket Test: http://localhost:3000/test-socket")
+	logger.Info("WebSocket Endpoint: ws://localhost:3000/ws")
 
 	if err := http.ListenAndServe(":3000", r); err != nil {
 		logger.Fatal("Failed to start server: " + err.Error())

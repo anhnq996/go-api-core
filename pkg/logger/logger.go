@@ -132,10 +132,8 @@ func Init(cfg Config) error {
 
 			if cfg.DailyRotation {
 				fileWriter, err = getDailyFileWriter(requestLogPath)
-				fmt.Printf("✅ Using DailyWriter for request logs\n")
 			} else {
 				fileWriter, err = getFileWriter(requestLogPath)
-				fmt.Printf("⚠️ Using static file writer for request logs\n")
 			}
 
 			if err != nil {
@@ -164,15 +162,6 @@ func Init(cfg Config) error {
 
 	if cfg.EnableCaller {
 		RequestLogger = RequestLogger.With().Caller().Logger()
-	}
-
-	// Log initialization success
-	fmt.Printf("✅ RequestLogger initialized with %d writers (DailyRotation: %v)\n", len(requestWriters), cfg.DailyRotation)
-	if cfg.DailyRotation {
-		fmt.Printf("✅ Request logs will be saved to: %s\n", cfg.RequestLogPath)
-		fmt.Printf("✅ Daily rotation enabled - files will be: %s-YYYY-MM-DD.log\n", cfg.RequestLogPath)
-	} else {
-		fmt.Printf("⚠️ Daily rotation DISABLED - using static file: %s\n", cfg.RequestLogPath)
 	}
 
 	// Initialize dynamic logger

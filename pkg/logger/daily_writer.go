@@ -35,9 +35,6 @@ func NewDailyWriter(basePath string) (*DailyWriter, error) {
 		return nil, err
 	}
 
-	// Debug logging
-	fmt.Printf("✅ DailyWriter created for: %s -> %s\n", basePath, dw.current.Name())
-
 	return dw, nil
 }
 

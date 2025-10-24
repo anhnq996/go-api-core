@@ -41,6 +41,12 @@ func (rw *responseWriter) Write(b []byte) (int, error) {
 func Middleware() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Skip logging for WebSocket connections
+			if r.Header.Get("Upgrade") == "websocket" {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			start := time.Now()
 
 			// Get request ID

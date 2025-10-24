@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Test - ApiCore</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+      .connected {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .disconnected {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .message {
+        background-color: #e9ecef;
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 4px;
+        border-left: 4px solid #007bff;
+      }
+      .input-group {
+        margin: 10px 0;
+      }
+      .input-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      .input-group input,
+      .input-group select,
+      .input-group textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      .input-group textarea {
+        height: 80px;
+        resize: vertical;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      button:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+      }
+      .messages {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        padding: 10px;
+        background-color: #f8f9fa;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        margin: 20px 0;
+      }
+      .stat-card {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 4px;
+        text-align: center;
+      }
+      .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+      }
+      .stat-label {
+        color: #6c757d;
+        margin-top: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚀 WebSocket Test - ApiCore</h1>
+
+      <!-- Connection Status -->
+      <div id="status" class="status disconnected">Disconnected</div>
+
+      <!-- Connection Controls -->
+      <div class="input-group">
+        <label for="serverUrl">Server URL:</label>
+        <input
+          type="text"
+          id="serverUrl"
+          value="ws://localhost:3000/ws"
+          placeholder="ws://localhost:3000/ws"
+        />
+      </div>
+
+      <div class="input-group">
+        <label for="userId">User ID:</label>
+        <input
+          type="text"
+          id="userId"
+          value="test_user_123"
+          placeholder="test_user_123"
+        />
+      </div>
+
+      <div>
+        <button id="connectBtn" onclick="connect()">Connect</button>
+        <button id="disconnectBtn" onclick="disconnect()" disabled>
+          Disconnect
+        </button>
+      </div>
+
+      <!-- Statistics -->
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-value" id="clientCount">0</div>
+          <div class="stat-label">Total Clients</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="roomCount">0</div>
+          <div class="stat-label">Total Rooms</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="messageCount">0</div>
+          <div class="stat-label">Messages Received</div>
+        </div>
+      </div>
+
+      <!-- Room Management -->
+      <h3>Room Management</h3>
+      <div class="input-group">
+        <label for="roomName">Room Name:</label>
+        <input
+          type="text"
+          id="roomName"
+          value="general"
+          placeholder="general"
+        />
+      </div>
+
+      <div>
+        <button onclick="joinRoom()">Join Room</button>
+        <button onclick="leaveRoom()">Leave Room</button>
+      </div>
+
+      <!-- Message Broadcasting -->
+      <h3>Message Broadcasting</h3>
+      <div class="input-group">
+        <label for="messageType">Message Type:</label>
+        <select id="messageType">
+          <option value="broadcast">Broadcast to All</option>
+          <option value="room_message">Send to Room</option>
+          <option value="private_message">Send to User</option>
+          <option value="notification">Notification</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label for="targetRoom">Target Room (for room messages):</label>
+        <input
+          type="text"
+          id="targetRoom"
+          value="general"
+          placeholder="general"
+        />
+      </div>
+
+      <div class="input-group">
+        <label for="targetUser">Target User ID (for private messages):</label>
+        <input
+          type="text"
+          id="targetUser"
+          value="user123"
+          placeholder="user123"
+        />
+      </div>
+
+      <div class="input-group">
+        <label for="messageContent">Message Content:</label>
+        <textarea id="messageContent" placeholder="Enter your message...">
+Hello from WebSocket test!</textarea
+        >
+      </div>
+
+      <div>
+        <button onclick="sendMessage()">Send Message</button>
+        <button onclick="sendTestNotification()">Send Test Notification</button>
+      </div>
+
+      <!-- Messages Log -->
+      <h3>Messages Log</h3>
+      <div class="messages" id="messages"></div>
+
+      <div>
+        <button onclick="clearMessages()">Clear Messages</button>
+        <button onclick="getStats()">Refresh Stats</button>
+      </div>
+    </div>
+
+    <script>
+      let ws = null;
+      let messageCount = 0;
+
+      function updateStatus(connected) {
+        const status = document.getElementById("status");
+        const connectBtn = document.getElementById("connectBtn");
+        const disconnectBtn = document.getElementById("disconnectBtn");
+
+        if (connected) {
+          status.textContent = "Connected";
+          status.className = "status connected";
+          connectBtn.disabled = true;
+          disconnectBtn.disabled = false;
+        } else {
+          status.textContent = "Disconnected";
+          status.className = "status disconnected";
+          connectBtn.disabled = false;
+          disconnectBtn.disabled = true;
+        }
+      }
+
+      function addMessage(message, type = "info") {
+        const messages = document.getElementById("messages");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "message";
+        messageDiv.innerHTML = `
+                <strong>[${new Date().toLocaleTimeString()}]</strong>
+                <span style="color: #007bff;">[${type.toUpperCase()}]</span>
+                ${message}
+            `;
+        messages.appendChild(messageDiv);
+        messages.scrollTop = messages.scrollHeight;
+
+        messageCount++;
+        document.getElementById("messageCount").textContent = messageCount;
+      }
+
+      function connect() {
+        const serverUrl = document.getElementById("serverUrl").value;
+        const userId = document.getElementById("userId").value;
+
+        if (!serverUrl || !userId) {
+          alert("Please enter server URL and User ID");
+          return;
+        }
+
+        const url = `${serverUrl}?user_id=${encodeURIComponent(userId)}`;
+
+        try {
+          ws = new WebSocket(url);
+
+          ws.onopen = function () {
+            updateStatus(true);
+            addMessage("Connected to WebSocket server", "success");
+            getStats(); // Get initial stats
+          };
+
+          ws.onmessage = function (event) {
+            const message = JSON.parse(event.data);
+            addMessage(
+              `Received: ${JSON.stringify(message, null, 2)}`,
+              "received"
+            );
+
+            // Handle different message types
+            switch (message.type) {
+              case "notification":
+                addMessage(
+                  `🔔 Notification: ${JSON.stringify(message.data)}`,
+                  "notification"
+                );
+                break;
+              case "room_message":
+                addMessage(
+                  `🏠 Room Message: ${JSON.stringify(message.data)}`,
+                  "room"
+                );
+                break;
+              case "private_message":
+                addMessage(
+                  `👤 Private Message: ${JSON.stringify(message.data)}`,
+                  "private"
+                );
+                break;
+              case "system_message":
+                addMessage(
+                  `⚙️ System Message: ${JSON.stringify(message.data)}`,
+                  "system"
+                );
+                break;
+            }
+          };
+
+          ws.onclose = function () {
+            updateStatus(false);
+            addMessage("Disconnected from WebSocket server", "warning");
+          };
+
+          ws.onerror = function (error) {
+            addMessage(`WebSocket error: ${error}`, "error");
+          };
+        } catch (error) {
+          addMessage(`Connection error: ${error}`, "error");
+        }
+      }
+
+      function disconnect() {
+        if (ws) {
+          ws.close();
+          ws = null;
+        }
+      }
+
+      function joinRoom() {
+        const roomName = document.getElementById("roomName").value;
+        if (!roomName) {
+          alert("Please enter a room name");
+          return;
+        }
+
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          const message = {
+            type: "join_room",
+            data: roomName,
+          };
+          ws.send(JSON.stringify(message));
+          addMessage(`Joined room: ${roomName}`, "action");
+        } else {
+          alert("Not connected to WebSocket");
+        }
+      }
+
+      function leaveRoom() {
+        const roomName = document.getElementById("roomName").value;
+        if (!roomName) {
+          alert("Please enter a room name");
+          return;
+        }
+
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          const message = {
+            type: "leave_room",
+            data: roomName,
+          };
+          ws.send(JSON.stringify(message));
+          addMessage(`Left room: ${roomName}`, "action");
+        } else {
+          alert("Not connected to WebSocket");
+        }
+      }
+
+      function sendMessage() {
+        const messageType = document.getElementById("messageType").value;
+        const messageContent = document.getElementById("messageContent").value;
+        const targetRoom = document.getElementById("targetRoom").value;
+        const targetUser = document.getElementById("targetUser").value;
+
+        if (!messageContent) {
+          alert("Please enter message content");
+          return;
+        }
+
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          let message = {
+            type: messageType,
+            data: messageContent,
+            timestamp: Date.now(),
+          };
+
+          if (messageType === "room_message") {
+            message.data = {
+              room: targetRoom,
+              message: messageContent,
+            };
+          }
+
+          ws.send(JSON.stringify(message));
+          addMessage(`Sent: ${JSON.stringify(message)}`, "sent");
+        } else {
+          alert("Not connected to WebSocket");
+        }
+      }
+
+      function sendTestNotification() {
+        const notification = {
+          type: "notification",
+          data: {
+            title: "Test Notification",
+            body: "This is a test notification from WebSocket",
+            type: "info",
+            timestamp: new Date().toISOString(),
+          },
+          timestamp: Date.now(),
+        };
+
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(notification));
+          addMessage(
+            `Sent test notification: ${JSON.stringify(notification)}`,
+            "sent"
+          );
+        } else {
+          alert("Not connected to WebSocket");
+        }
+      }
+
+      function clearMessages() {
+        document.getElementById("messages").innerHTML = "";
+        messageCount = 0;
+        document.getElementById("messageCount").textContent = messageCount;
+      }
+
+      function getStats() {
+        // Get server URL from input and convert to HTTP URL
+        const serverUrl = document.getElementById("serverUrl").value;
+        let httpUrl = serverUrl;
+
+        // Convert WebSocket URL to HTTP URL
+        if (serverUrl.startsWith("ws://")) {
+          httpUrl = serverUrl.replace("ws://", "http://");
+        } else if (serverUrl.startsWith("wss://")) {
+          httpUrl = serverUrl.replace("wss://", "https://");
+        }
+
+        // Remove /ws path if present
+        if (httpUrl.endsWith("/ws")) {
+          httpUrl = httpUrl.replace("/ws", "");
+        }
+
+        const statsUrl = `${httpUrl}/socket/stats`;
+
+        fetch(statsUrl)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              document.getElementById("clientCount").textContent =
+                data.data.total_clients;
+              document.getElementById("roomCount").textContent =
+                data.data.total_rooms;
+              addMessage(
+                `Stats updated: ${data.data.total_clients} clients, ${data.data.total_rooms} rooms`,
+                "info"
+              );
+            }
+          })
+          .catch((error) => {
+            addMessage(`Failed to get stats: ${error}`, "error");
+          });
+      }
+
+      // Auto-refresh stats every 5 seconds when connected
+      setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          getStats();
+        }
+      }, 5000);
+    </script>
+  </body>
+</html>
