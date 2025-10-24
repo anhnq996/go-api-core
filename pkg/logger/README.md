@@ -32,8 +32,10 @@ func main() {
         Level:        "debug",        // debug, info, warn, error
         Output:       "both",         // console, file, both
         FilePath:     "storages/logs/app.log",
+        RequestLogPath: "storages/logs/request.log", // request log path
         EnableCaller: false,          // hiển thị file:line
         PrettyPrint:  true,           // format đẹp cho console
+        DailyRotation: true,          // bật daily rotation
     }); err != nil {
         panic(err)
     }
@@ -42,13 +44,50 @@ func main() {
 
 ### Config Options
 
-| Field          | Type   | Description          | Values                           |
-| -------------- | ------ | -------------------- | -------------------------------- |
-| `Level`        | string | Log level            | `debug`, `info`, `warn`, `error` |
-| `Output`       | string | Output destination   | `console`, `file`, `both`        |
-| `FilePath`     | string | Log file path        | Ví dụ: `storages/logs/app.log`   |
-| `EnableCaller` | bool   | Show file:line       | `true`, `false`                  |
-| `PrettyPrint`  | bool   | Pretty print console | `true`, `false`                  |
+| Field            | Type   | Description           | Values                             |
+| ---------------- | ------ | --------------------- | ---------------------------------- |
+| `Level`          | string | Log level             | `debug`, `info`, `warn`, `error`   |
+| `Output`         | string | Output destination    | `console`, `file`, `both`          |
+| `FilePath`       | string | Log file path         | Ví dụ: `storages/logs/app.log`     |
+| `RequestLogPath` | string | Request log file path | Ví dụ: `storages/logs/request.log` |
+| `EnableCaller`   | bool   | Show file:line        | `true`, `false`                    |
+| `PrettyPrint`    | bool   | Pretty print console  | `true`, `false`                    |
+| `DailyRotation`  | bool   | Enable daily rotation | `true`, `false`                    |
+
+## Daily Rotation
+
+Logger hỗ trợ daily rotation tự động cho log files. Khi bật `DailyRotation: true`, log files sẽ được tạo với format `filename-YYYY-MM-DD.log`.
+
+### Ví dụ Daily Rotation
+
+```go
+// Cấu hình với daily rotation
+config := logger.Config{
+    Level:        "debug",
+    Output:       "console,file",
+    FilePath:     "storages/logs/app.log",
+    RequestLogPath: "storages/logs/request.log",
+    DailyRotation: true,
+}
+
+// Khởi tạo logger
+logger.Init(config)
+
+// Logs sẽ được ghi vào:
+// - storages/logs/app-2024-01-15.log
+// - storages/logs/request-2024-01-15.log
+```
+
+### File Structure với Daily Rotation
+
+```
+storages/logs/
+├── app-2024-01-15.log      # Application logs
+├── app-2024-01-16.log      # Application logs (next day)
+├── request-2024-01-15.log  # Request logs
+├── request-2024-01-16.log  # Request logs (next day)
+└── cleanup-logs-2024-01-15.log  # Job-specific logs
+```
 
 ## Sử Dụng
 

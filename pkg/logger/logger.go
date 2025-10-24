@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -19,14 +20,26 @@ import (
 var Logger zerolog.Logger
 var RequestLogger zerolog.Logger // Logger riêng cho requests
 
+// LoggerManager manages dynamic loggers
+type LoggerManager struct {
+	defaultConfig Config
+	defaultLogger zerolog.Logger
+	loggers       map[string]zerolog.Logger
+	mu            sync.RWMutex
+}
+
+var Manager *LoggerManager
+
 // Config cấu hình cho logger
 type Config struct {
-	Level        string // debug, info, warn, error
-	Output       string // console, file, loki (có thể kết hợp: "console,file,loki")
-	FilePath     string // đường dẫn file log
-	LokiURL      string // Loki server URL (ví dụ: http://localhost:3100)
-	EnableCaller bool   // hiển thị file:line
-	PrettyPrint  bool   // format đẹp cho console
+	Level          string // debug, info, warn, error
+	Output         string // console, file, loki (có thể kết hợp: "console,file,loki")
+	FilePath       string // đường dẫn file log
+	RequestLogPath string // đường dẫn file log cho requests (mặc định: request.log)
+	LokiURL        string // Loki server URL (ví dụ: http://localhost:3100)
+	EnableCaller   bool   // hiển thị file:line
+	PrettyPrint    bool   // format đẹp cho console
+	DailyRotation  bool   // bật daily rotation cho file logs
 }
 
 // Init khởi tạo logger với config
@@ -55,7 +68,15 @@ func Init(cfg Config) error {
 		case "console":
 			writers = append(writers, getConsoleWriter(cfg.PrettyPrint))
 		case "file":
-			fileWriter, err := getFileWriter(cfg.FilePath)
+			var fileWriter io.Writer
+			var err error
+
+			if cfg.DailyRotation {
+				fileWriter, err = getDailyFileWriter(cfg.FilePath)
+			} else {
+				fileWriter, err = getFileWriter(cfg.FilePath)
+			}
+
 			if err != nil {
 				return fmt.Errorf("failed to create file writer: %w", err)
 			}
@@ -96,9 +117,29 @@ func Init(cfg Config) error {
 		case "console":
 			requestWriters = append(requestWriters, getConsoleWriter(cfg.PrettyPrint))
 		case "file":
-			fileWriter, err := getFileWriter(cfg.FilePath)
+			// Sử dụng RequestLogPath nếu có, nếu không thì dùng FilePath
+			requestLogPath := cfg.RequestLogPath
+			if requestLogPath == "" {
+				// Tạo tên file request từ FilePath
+				dir := filepath.Dir(cfg.FilePath)
+				requestLogPath = filepath.Join(dir, "request.log")
+			}
+
+			var fileWriter io.Writer
+			var err error
+
+			fmt.Printf("🔍 Creating RequestLogger file writer: path=%s, dailyRotation=%v\n", requestLogPath, cfg.DailyRotation)
+
+			if cfg.DailyRotation {
+				fileWriter, err = getDailyFileWriter(requestLogPath)
+				fmt.Printf("✅ Using DailyWriter for request logs\n")
+			} else {
+				fileWriter, err = getFileWriter(requestLogPath)
+				fmt.Printf("⚠️ Using static file writer for request logs\n")
+			}
+
 			if err != nil {
-				return fmt.Errorf("failed to create file writer: %w", err)
+				return fmt.Errorf("failed to create request file writer: %w", err)
 			}
 			requestWriters = append(requestWriters, fileWriter)
 		case "loki":
@@ -124,6 +165,18 @@ func Init(cfg Config) error {
 	if cfg.EnableCaller {
 		RequestLogger = RequestLogger.With().Caller().Logger()
 	}
+
+	// Log initialization success
+	fmt.Printf("✅ RequestLogger initialized with %d writers (DailyRotation: %v)\n", len(requestWriters), cfg.DailyRotation)
+	if cfg.DailyRotation {
+		fmt.Printf("✅ Request logs will be saved to: %s\n", cfg.RequestLogPath)
+		fmt.Printf("✅ Daily rotation enabled - files will be: %s-YYYY-MM-DD.log\n", cfg.RequestLogPath)
+	} else {
+		fmt.Printf("⚠️ Daily rotation DISABLED - using static file: %s\n", cfg.RequestLogPath)
+	}
+
+	// Initialize dynamic logger
+	InitDynamic(cfg, Logger)
 
 	return nil
 }
