@@ -2,11 +2,9 @@ package config
 
 import (
 	"fmt"
-	"os"
-	"strconv"
-	"strings"
 
 	"anhnq/api-core/pkg/email"
+	"anhnq/api-core/pkg/utils"
 )
 
 // EmailConfig cấu hình cho email service
@@ -22,49 +20,15 @@ type EmailConfig struct {
 
 // LoadEmailConfig load email config từ environment variables
 func LoadEmailConfig() *EmailConfig {
-	config := &EmailConfig{
-		// Default values for MailHog
-		SMTPHost:     "localhost",
-		SMTPPort:     1025,
-		SMTPUsername: "",
-		SMTPPassword: "",
-		FromEmail:    "noreply@apicore.com",
-		FromName:     "ApiCore",
-		UseTLS:       false,
+	return &EmailConfig{
+		SMTPHost:     utils.GetEnv("SMTP_HOST", "localhost"),
+		SMTPPort:     utils.GetEnvInt("SMTP_PORT", 1025),
+		SMTPUsername: utils.GetEnv("SMTP_USERNAME", ""),
+		SMTPPassword: utils.GetEnv("SMTP_PASSWORD", ""),
+		FromEmail:    utils.GetEnv("EMAIL_FROM", "noreply@apicore.com"),
+		FromName:     utils.GetEnv("EMAIL_FROM_NAME", "ApiCore"),
+		UseTLS:       utils.GetEnvBool("SMTP_USE_TLS", false),
 	}
-
-	// Load from environment variables
-	if smtpHost := os.Getenv("SMTP_HOST"); smtpHost != "" {
-		config.SMTPHost = smtpHost
-	}
-
-	if smtpPort := os.Getenv("SMTP_PORT"); smtpPort != "" {
-		if port, err := strconv.Atoi(smtpPort); err == nil {
-			config.SMTPPort = port
-		}
-	}
-
-	if smtpUsername := os.Getenv("SMTP_USERNAME"); smtpUsername != "" {
-		config.SMTPUsername = smtpUsername
-	}
-
-	if smtpPassword := os.Getenv("SMTP_PASSWORD"); smtpPassword != "" {
-		config.SMTPPassword = smtpPassword
-	}
-
-	if fromEmail := os.Getenv("EMAIL_FROM"); fromEmail != "" {
-		config.FromEmail = fromEmail
-	}
-
-	if fromName := os.Getenv("EMAIL_FROM_NAME"); fromName != "" {
-		config.FromName = fromName
-	}
-
-	if useTLS := os.Getenv("SMTP_USE_TLS"); useTLS != "" {
-		config.UseTLS = strings.ToLower(useTLS) == "true"
-	}
-
-	return config
 }
 
 // ValidateEmailConfig kiểm tra email config có hợp lệ không

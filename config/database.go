@@ -2,7 +2,8 @@ package config
 
 import (
 	"fmt"
-	"os"
+
+	"anhnq/api-core/pkg/utils"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -22,12 +23,12 @@ type DatabaseConfig struct {
 // GetDefaultDatabaseConfig trả về config mặc định từ env
 func GetDefaultDatabaseConfig() DatabaseConfig {
 	return DatabaseConfig{
-		Host:     getEnv("DB_HOST", "localhost"),
-		Port:     getEnv("DB_PORT", "5432"),
-		User:     getEnv("DB_USER", "postgres"),
-		Password: getEnv("DB_PASSWORD", "postgres"),
-		DBName:   getEnv("DB_NAME", "apicore"),
-		SSLMode:  getEnv("DB_SSLMODE", "disable"),
+		Host:     utils.GetEnv("DB_HOST", "localhost"),
+		Port:     utils.GetEnv("DB_PORT", "5432"),
+		User:     utils.GetEnv("DB_USER", "postgres"),
+		Password: utils.GetEnv("DB_PASSWORD", "postgres"),
+		DBName:   utils.GetEnv("DB_NAME", "apicore"),
+		SSLMode:  utils.GetEnv("DB_SSLMODE", "disable"),
 	}
 }
 
@@ -56,13 +57,4 @@ func ConnectDatabase(cfg DatabaseConfig) (*gorm.DB, error) {
 	sqlDB.SetMaxOpenConns(100)
 
 	return db, nil
-}
-
-// getEnv lấy env var hoặc default value
-func getEnv(key, defaultValue string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
-	}
-	return value
 }

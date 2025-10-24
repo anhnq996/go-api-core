@@ -2,16 +2,9 @@ package middleware
 
 import (
 	"net/http"
-	"os"
-)
 
-// getEnv gets environment variable with default value
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
-}
+	"anhnq/api-core/pkg/utils"
+)
 
 // CustomHeaders middleware adds custom headers to responses
 func CustomHeaders(headers map[string]string) func(http.Handler) http.Handler {
@@ -23,10 +16,10 @@ func CustomHeaders(headers map[string]string) func(http.Handler) http.Handler {
 			}
 
 			// Set additional headers from environment variables
-			if apiVersion := getEnv("API_VERSION", ""); apiVersion != "" {
+			if apiVersion := utils.GetEnv("API_VERSION", ""); apiVersion != "" {
 				w.Header().Set("X-API-Version", apiVersion)
 			}
-			if poweredBy := getEnv("API_POWERED_BY", ""); poweredBy != "" {
+			if poweredBy := utils.GetEnv("API_POWERED_BY", ""); poweredBy != "" {
 				w.Header().Set("X-Powered-By", poweredBy)
 			}
 
@@ -41,14 +34,14 @@ func CORSHeaders() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Set CORS headers from environment variables
-			w.Header().Set("Access-Control-Allow-Origin", getEnv("CORS_ALLOWED_ORIGINS", "*"))
-			w.Header().Set("Access-Control-Allow-Methods", getEnv("CORS_ALLOWED_METHODS", "GET, POST, PUT, DELETE, OPTIONS, PATCH"))
-			w.Header().Set("Access-Control-Allow-Headers", getEnv("CORS_ALLOWED_HEADERS", "*"))
-			w.Header().Set("Access-Control-Expose-Headers", getEnv("CORS_EXPOSED_HEADERS", "Link"))
-			w.Header().Set("Access-Control-Max-Age", getEnv("CORS_MAX_AGE", "300"))
+			w.Header().Set("Access-Control-Allow-Origin", utils.GetEnv("CORS_ALLOWED_ORIGINS", "*"))
+			w.Header().Set("Access-Control-Allow-Methods", utils.GetEnv("CORS_ALLOWED_METHODS", "GET, POST, PUT, DELETE, OPTIONS, PATCH"))
+			w.Header().Set("Access-Control-Allow-Headers", utils.GetEnv("CORS_ALLOWED_HEADERS", "*"))
+			w.Header().Set("Access-Control-Expose-Headers", utils.GetEnv("CORS_EXPOSED_HEADERS", "Link"))
+			w.Header().Set("Access-Control-Max-Age", utils.GetEnv("CORS_MAX_AGE", "300"))
 
 			// Set Allow-Credentials if enabled
-			if getEnv("CORS_ALLOW_CREDENTIALS", "false") == "true" {
+			if utils.GetEnvBool("CORS_ALLOW_CREDENTIALS", false) {
 				w.Header().Set("Access-Control-Allow-Credentials", "true")
 			}
 

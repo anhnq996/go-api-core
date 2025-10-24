@@ -2,11 +2,10 @@ package config
 
 import (
 	"fmt"
-	"os"
-	"strconv"
 	"strings"
 
 	"anhnq/api-core/pkg/logger"
+	"anhnq/api-core/pkg/utils"
 )
 
 // LoggerConfig cấu hình cho logger
@@ -22,53 +21,15 @@ type LoggerConfig struct {
 
 // LoadLoggerConfig load logger config từ environment variables
 func LoadLoggerConfig() *LoggerConfig {
-	config := &LoggerConfig{
-		// Default values
-		Level:         "debug",
-		Output:        "console,file",
-		LogPath:       "storages/logs",
-		LokiURL:       "http://localhost:3100",
-		EnableCaller:  false,
-		PrettyPrint:   true,
-		DailyRotation: true,
+	return &LoggerConfig{
+		Level:         utils.GetEnv("LOG_LEVEL", "debug"),
+		Output:        utils.GetEnv("LOG_OUTPUT", "console,file"),
+		LogPath:       utils.GetEnv("LOG_PATH", "storages/logs"),
+		LokiURL:       utils.GetEnv("LOG_LOKI_URL", "http://localhost:3100"),
+		EnableCaller:  utils.GetEnvBool("LOG_ENABLE_CALLER", false),
+		PrettyPrint:   utils.GetEnvBool("LOG_PRETTY_PRINT", true),
+		DailyRotation: utils.GetEnvBool("LOG_DAILY_ROTATION", true),
 	}
-
-	// Load from environment variables
-	if level := os.Getenv("LOG_LEVEL"); level != "" {
-		config.Level = level
-	}
-
-	if output := os.Getenv("LOG_OUTPUT"); output != "" {
-		config.Output = output
-	}
-
-	if logPath := os.Getenv("LOG_PATH"); logPath != "" {
-		config.LogPath = logPath
-	}
-
-	if lokiURL := os.Getenv("LOG_LOKI_URL"); lokiURL != "" {
-		config.LokiURL = lokiURL
-	}
-
-	if enableCaller := os.Getenv("LOG_ENABLE_CALLER"); enableCaller != "" {
-		if parsed, err := strconv.ParseBool(enableCaller); err == nil {
-			config.EnableCaller = parsed
-		}
-	}
-
-	if prettyPrint := os.Getenv("LOG_PRETTY_PRINT"); prettyPrint != "" {
-		if parsed, err := strconv.ParseBool(prettyPrint); err == nil {
-			config.PrettyPrint = parsed
-		}
-	}
-
-	if dailyRotation := os.Getenv("LOG_DAILY_ROTATION"); dailyRotation != "" {
-		if parsed, err := strconv.ParseBool(dailyRotation); err == nil {
-			config.DailyRotation = parsed
-		}
-	}
-
-	return config
 }
 
 // ValidateLoggerConfig kiểm tra config có hợp lệ không

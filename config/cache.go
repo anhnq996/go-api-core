@@ -3,7 +3,8 @@ package config
 import (
 	"anhnq/api-core/pkg/cache"
 	"fmt"
-	"strconv"
+
+	"anhnq/api-core/pkg/utils"
 )
 
 // CacheConfig cấu hình cache
@@ -15,18 +16,14 @@ type CacheConfig struct {
 	PoolSize int
 }
 
-// GetDefaultCacheConfig trả về config mặc định
+// GetDefaultCacheConfig trả về config mặc định từ env
 func GetDefaultCacheConfig() CacheConfig {
-	// Use getEnv from database.go package
-	dbNum, _ := strconv.Atoi("0")
-	poolSize, _ := strconv.Atoi("10")
-
 	return CacheConfig{
-		Host:     "localhost",
-		Port:     "6379",
-		Password: "",
-		DB:       dbNum,
-		PoolSize: poolSize,
+		Host:     utils.GetEnv("REDIS_HOST", "localhost"),
+		Port:     utils.GetEnv("REDIS_PORT", "6379"),
+		Password: utils.GetEnv("REDIS_PASSWORD", ""),
+		DB:       utils.GetEnvInt("REDIS_DB", 0),
+		PoolSize: utils.GetEnvInt("REDIS_POOL_SIZE", 10),
 	}
 }
 
