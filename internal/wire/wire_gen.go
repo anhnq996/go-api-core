@@ -26,10 +26,9 @@ func InitializeApp(db *gorm.DB, cacheClient cache.Cache) (*routes.Controllers, e
 	}
 	service := user.NewService(userRepository, cacheClient, storageManager)
 	handler := user.NewHandler(service)
-	authRepository := repository.NewAuthRepository(db)
 	manager := ProvideJWTManager()
 	blacklist := ProvideJWTBlacklist(cacheClient)
-	authService := auth.NewService(authRepository, manager, blacklist)
+	authService := auth.NewService(userRepository, manager, blacklist)
 	authHandler := auth.NewHandler(authService)
 	controllers := routes.NewControllers(handler, authHandler, manager, blacklist)
 	return controllers, nil

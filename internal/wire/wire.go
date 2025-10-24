@@ -26,7 +26,6 @@ func InitializeApp(db *gorm.DB, cacheClient cache.Cache) (*routes.Controllers, e
 
 		// Repositories (cần DB)
 		repository.NewUserRepository,
-		repository.NewAuthRepository,
 
 		// Services (cần Repo + Cache + Storage)
 		user.NewService,

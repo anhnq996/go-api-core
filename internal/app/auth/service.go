@@ -21,19 +21,19 @@ var (
 
 // Service xử lý business logic cho auth
 type Service struct {
-	authRepo   repository.AuthRepository
+	userRepo   repository.UserRepository
 	jwtManager *jwt.Manager
 	blacklist  *jwt.Blacklist
 }
 
 // NewService tạo auth service mới
 func NewService(
-	authRepo repository.AuthRepository,
+	userRepo repository.UserRepository,
 	jwtManager *jwt.Manager,
 	blacklist *jwt.Blacklist,
 ) *Service {
 	return &Service{
-		authRepo:   authRepo,
+		userRepo:   userRepo,
 		jwtManager: jwtManager,
 		blacklist:  blacklist,
 	}
@@ -68,7 +68,7 @@ type RoleResponse struct {
 // Login xử lý login
 func (s *Service) Login(ctx context.Context, email, password string) (*LoginResponse, error) {
 	// Get user by email
-	user, err := s.authRepo.GetUserByEmail(ctx, email)
+	user, err := s.userRepo.GetUserByEmail(ctx, email)
 	if err != nil {
 		return nil, ErrInvalidCredentials
 	}
@@ -84,7 +84,7 @@ func (s *Service) Login(ctx context.Context, email, password string) (*LoginResp
 	}
 
 	// Get user with role and permissions
-	userWithRole, err := s.authRepo.GetUserWithRole(ctx, user.ID)
+	userWithRole, err := s.userRepo.GetUserWithRole(ctx, user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (s *Service) Login(ctx context.Context, email, password string) (*LoginResp
 	// Get permissions
 	var permissions []string
 	if userWithRole.RoleID != nil {
-		permissions, err = s.authRepo.GetUserPermissions(ctx, *userWithRole.RoleID)
+		permissions, err = s.userRepo.GetUserPermissions(ctx, *userWithRole.RoleID)
 		if err != nil {
 			permissions = []string{}
 		}
@@ -112,7 +112,7 @@ func (s *Service) Login(ctx context.Context, email, password string) (*LoginResp
 	}
 
 	// Update last login
-	s.authRepo.UpdateLastLogin(ctx, user.ID)
+	s.userRepo.UpdateLastLogin(ctx, user.ID)
 
 	// Build response
 	response := &LoginResponse{
@@ -147,7 +147,7 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*Login
 	}
 
 	// Get user with role
-	user, err := s.authRepo.GetUserWithRole(ctx, userID)
+	user, err := s.userRepo.GetUserWithRole(ctx, userID)
 	if err != nil {
 		return nil, ErrUserNotFound
 	}
@@ -160,7 +160,7 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*Login
 	// Get permissions
 	var permissions []string
 	if user.RoleID != nil {
-		permissions, err = s.authRepo.GetUserPermissions(ctx, *user.RoleID)
+		permissions, err = s.userRepo.GetUserPermissions(ctx, *user.RoleID)
 		if err != nil {
 			permissions = []string{}
 		}
@@ -220,7 +220,7 @@ func (s *Service) LogoutAll(ctx context.Context, userID uuid.UUID) error {
 // GetUserInfo lấy thông tin user hiện tại
 func (s *Service) GetUserInfo(ctx context.Context, userID uuid.UUID) (*UserResponse, error) {
 	// Get user with role
-	user, err := s.authRepo.GetUserWithRole(ctx, userID)
+	user, err := s.userRepo.GetUserWithRole(ctx, userID)
 	if err != nil {
 		return nil, ErrUserNotFound
 	}
@@ -228,7 +228,7 @@ func (s *Service) GetUserInfo(ctx context.Context, userID uuid.UUID) (*UserRespo
 	// Get permissions
 	var permissions []string
 	if user.RoleID != nil {
-		permissions, err = s.authRepo.GetUserPermissions(ctx, *user.RoleID)
+		permissions, err = s.userRepo.GetUserPermissions(ctx, *user.RoleID)
 		if err != nil {
 			permissions = []string{}
 		}
@@ -247,7 +247,7 @@ func (s *Service) GetUserInfo(ctx context.Context, userID uuid.UUID) (*UserRespo
 // Register đăng ký user mới
 func (s *Service) Register(ctx context.Context, name, email, password string, roleID *uuid.UUID) (*model.User, error) {
 	// Check email exists
-	_, err := s.authRepo.GetUserByEmail(ctx, email)
+	_, err := s.userRepo.GetUserByEmail(ctx, email)
 	if err == nil {
 		return nil, errors.New("email already exists")
 	}
@@ -267,7 +267,7 @@ func (s *Service) Register(ctx context.Context, name, email, password string, ro
 		IsActive: true,
 	}
 
-	err = s.authRepo.Create(ctx, user)
+	err = s.userRepo.Create(ctx, user)
 	if err != nil {
 		return nil, err
 	}
