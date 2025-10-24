@@ -119,6 +119,21 @@ services:
   #   depends_on:
   #     - loki
 
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: apicore-mailhog
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
 volumes:
   redis-data:
     driver: local

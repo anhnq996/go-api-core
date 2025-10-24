@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -67,22 +68,37 @@ func loadEnvironment() {
 	if err := godotenv.Load(); err != nil {
 		log.Printf("Warning: Error loading .env file: %v", err)
 	}
+
+	log.Println("Environment variables loaded successfully")
+	log.Println("Environment variables:")
+	log.Println("  - PORT:", os.Getenv("PORT"))
+	log.Println("  - DB_HOST:", os.Getenv("DB_HOST"))
+	log.Println("  - DB_PORT:", os.Getenv("DB_PORT"))
+	log.Println("  - DB_USER:", os.Getenv("DB_USER"))
+	log.Println("  - DB_PASSWORD:", os.Getenv("DB_PASSWORD"))
+	log.Println("  - DB_NAME:", os.Getenv("DB_NAME"))
 }
 
 // initLogger initializes the logger
 func initLogger() {
-	if err := logger.Init(logger.Config{
-		Level:          "debug",                     // debug, info, warn, error
-		Output:         "console,file,loki",         // console, file, loki (có thể kết hợp)
-		FilePath:       "storages/logs/app.log",     // file log path
-		RequestLogPath: "storages/logs/request.log", // request log path
-		LokiURL:        "http://localhost:3100",     // Loki server URL
-		EnableCaller:   false,                       // hiển thị file:line
-		PrettyPrint:    true,                        // format đẹp cho console
-		DailyRotation:  true,                        // bật daily rotation
-	}); err != nil {
+	// Load logger config từ environment variables
+	loggerConfig := config.LoadLoggerConfig()
+
+	// Validate config
+	if err := loggerConfig.Validate(); err != nil {
+		panic(fmt.Sprintf("Invalid logger config: %v", err))
+	}
+
+	// Convert to logger.Config và initialize
+	if err := logger.Init(loggerConfig.ToLoggerConfig()); err != nil {
 		panic(err)
 	}
+
+	log.Printf("Logger initialized with config:")
+	log.Printf("  - Level: %s", loggerConfig.Level)
+	log.Printf("  - Output: %s", loggerConfig.Output)
+	log.Printf("  - LogPath: %s", loggerConfig.LogPath)
+	log.Printf("  - DailyRotation: %v", loggerConfig.DailyRotation)
 }
 
 // initI18n initializes internationalization
