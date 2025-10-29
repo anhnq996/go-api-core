@@ -35,7 +35,7 @@ type userRepository struct {
 // NewUserRepository tạo user repository mới
 func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{
-		BaseRepository: NewBaseRepository[model.User](db),
+		BaseRepository: NewBaseRepository[model.User](db, true), // Enable action events for UserRepository
 	}
 }
 

@@ -25,6 +25,7 @@ func (m *Manager) Middleware(next http.Handler) http.Handler {
 
 		// Lấy token từ Authorization header
 		token := ExtractTokenFromHeader(r)
+
 		if token == "" {
 			response.Unauthorized(w, lang, response.CodeTokenMissing)
 			return

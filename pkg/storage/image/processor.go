@@ -139,7 +139,7 @@ func (p *ImageProcessor) Convert(ctx context.Context, reader io.Reader, format s
 	}
 
 	// Encode to new format
-	return p.encodeImage(img, format)
+	return p.encodeImage(img, format) 
 }
 
 // GetInfo lấy thông tin ảnh

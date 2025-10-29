@@ -2,8 +2,12 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
+
+	"api-core/pkg/actionEvent"
+	"api-core/pkg/jwt"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -39,17 +43,41 @@ type Repository[T any] interface {
 
 // BaseRepository implementation với generics
 type BaseRepository[T any] struct {
-	db *gorm.DB
+	db          *gorm.DB
+	entityName  string
+	actionEvent bool // Flag to enable/disable action event logging
 }
 
 // NewBaseRepository khởi tạo BaseRepository
-func NewBaseRepository[T any](db *gorm.DB) *BaseRepository[T] {
-	return &BaseRepository[T]{db: db}
+func NewBaseRepository[T any](db *gorm.DB, actionEvent bool) *BaseRepository[T] {
+	var entity T
+	entityName := fmt.Sprintf("%T", entity)
+	// Remove package prefix if exists
+	if idx := strings.LastIndex(entityName, "."); idx != -1 {
+		entityName = entityName[idx+1:]
+	}
+
+	return &BaseRepository[T]{
+		db:          db,
+		entityName:  strings.ToLower(entityName),
+		actionEvent: actionEvent,
+	}
 }
 
 // Create tạo entity mới
 func (r *BaseRepository[T]) Create(ctx context.Context, entity *T) error {
-	return r.db.WithContext(ctx).Create(entity).Error
+	err := r.db.WithContext(ctx).Create(entity).Error
+	if err == nil && r.actionEvent {
+		// Extract ID from entity for logging
+		entityID := r.extractEntityID(entity)
+		userID := r.extractUserIDFromContext(ctx)
+
+		// Log create event with dynamic job
+		job := r.getJobName("action_events")
+		newData := r.convertEntityToMap(entity)
+		actionEvent.LogCreate(ctx, job, r.entityName, entityID, userID, newData)
+	}
+	return err
 }
 
 // FindAll lấy tất cả entities
@@ -71,13 +99,39 @@ func (r *BaseRepository[T]) FindByID(ctx context.Context, id uuid.UUID) (*T, err
 
 // Update cập nhật entity
 func (r *BaseRepository[T]) Update(ctx context.Context, id uuid.UUID, entity *T) error {
-	return r.db.WithContext(ctx).Model(entity).Where("id = ?", id).Updates(entity).Error
+	// Get old data before update
+	var oldEntity T
+	oldErr := r.db.WithContext(ctx).First(&oldEntity, "id = ?", id).Error
+
+	err := r.db.WithContext(ctx).Model(entity).Where("id = ?", id).Updates(entity).Error
+	if err == nil && r.actionEvent {
+		userID := r.extractUserIDFromContext(ctx)
+
+		// Log update event with dynamic job
+		job := r.getJobName("action_events")
+		var oldData map[string]interface{}
+		if oldErr == nil {
+			oldData = r.convertEntityToMap(&oldEntity)
+		}
+		newData := r.convertEntityToMap(entity)
+		actionEvent.LogUpdate(ctx, job, r.entityName, id.String(), userID, oldData, newData)
+	}
+	return err
 }
 
 // Delete xóa entity (soft delete nếu model có DeletedAt)
 func (r *BaseRepository[T]) Delete(ctx context.Context, id uuid.UUID) error {
 	var entity T
-	return r.db.WithContext(ctx).Delete(&entity, "id = ?", id).Error
+	err := r.db.WithContext(ctx).Delete(&entity, "id = ?", id).Error
+	if err == nil && r.actionEvent {
+		userID := r.extractUserIDFromContext(ctx)
+
+		// Log delete event with dynamic job
+		job := r.getJobName("action_events")
+		data := r.convertEntityToMap(&entity)
+		actionEvent.LogDelete(ctx, job, r.entityName, id.String(), userID, data)
+	}
+	return err
 }
 
 // Count đếm tổng số entities
@@ -235,4 +289,61 @@ func (r *BaseRepository[T]) Transaction(fn func(*gorm.DB) error) error {
 func (r *BaseRepository[T]) NotFoundError(id uuid.UUID) error {
 	var entity T
 	return fmt.Errorf("%T with id %s not found", entity, id)
+}
+
+// Helper methods for event logging
+
+// extractEntityID extracts ID from entity using reflection
+func (r *BaseRepository[T]) extractEntityID(entity *T) string {
+	// Use reflection to get ID field
+	// This is a simplified version - you might want to use a more robust approach
+	// For now, we'll assume entities have an ID field
+	// In a real implementation, you might want to use reflection or interface{} approach
+
+	// For now, return empty string and let the caller handle it
+	// This is a placeholder - you can implement proper ID extraction based on your entity structure
+	return ""
+}
+
+// extractUserIDFromContext extracts user ID from context
+func (r *BaseRepository[T]) extractUserIDFromContext(ctx context.Context) string {
+	// Use JWT package's function to get user ID from context
+	return jwt.GetUserIDFromContext(ctx)
+}
+
+// convertEntityToMap converts entity to map[string]interface{}
+func (r *BaseRepository[T]) convertEntityToMap(entity *T) map[string]interface{} {
+	// Use JSON marshaling/unmarshaling to convert struct to map
+	// This is a simple approach that works for most cases
+	data := make(map[string]interface{})
+
+	// Convert to JSON first
+	jsonData, err := json.Marshal(entity)
+	if err != nil {
+		return map[string]interface{}{
+			"error": "failed to convert entity to map",
+		}
+	}
+
+	// Unmarshal to map
+	err = json.Unmarshal(jsonData, &data)
+	if err != nil {
+		return map[string]interface{}{
+			"error": "failed to convert entity to map",
+		}
+	}
+
+	return data
+}
+
+// getJobName creates dynamic job name based on entity and action
+func (r *BaseRepository[T]) getJobName(action string) string {
+	// You can customize this logic based on your needs
+	// Examples:
+	// - "user_create", "user_update", "user_delete"
+	// - "action_events" (default)
+	// - "crud_events"
+
+	// For now, return a dynamic job name
+	return action
 }

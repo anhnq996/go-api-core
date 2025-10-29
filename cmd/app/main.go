@@ -12,6 +12,7 @@ import (
 	"api-core/internal/routes"
 	"api-core/internal/schedules"
 	"api-core/internal/wire"
+	"api-core/pkg/actionEvent"
 	"api-core/pkg/cache"
 	"api-core/pkg/cron"
 	"api-core/pkg/exception"
@@ -43,6 +44,9 @@ func main() {
 	// Initialize validation messages
 	initValidation()
 
+	// Initialize Loki events
+	initActionEvents()
+
 	// Connect to database
 	db := initDatabase()
 
@@ -73,15 +77,6 @@ func loadEnvironment() {
 	if err := godotenv.Load(); err != nil {
 		log.Printf("Warning: Error loading .env file: %v", err)
 	}
-
-	log.Println("Environment variables loaded successfully")
-	log.Println("Environment variables:")
-	log.Println("  - PORT:", os.Getenv("PORT"))
-	log.Println("  - DB_HOST:", os.Getenv("DB_HOST"))
-	log.Println("  - DB_PORT:", os.Getenv("DB_PORT"))
-	log.Println("  - DB_USER:", os.Getenv("DB_USER"))
-	log.Println("  - DB_PASSWORD:", os.Getenv("DB_PASSWORD"))
-	log.Println("  - DB_NAME:", os.Getenv("DB_NAME"))
 }
 
 // initLogger initializes the logger
@@ -98,12 +93,6 @@ func initLogger() {
 	if err := logger.Init(loggerConfig.ToLoggerConfig()); err != nil {
 		panic(err)
 	}
-
-	log.Printf("Logger initialized with config:")
-	log.Printf("  - Level: %s", loggerConfig.Level)
-	log.Printf("  - Output: %s", loggerConfig.Output)
-	log.Printf("  - LogPath: %s", loggerConfig.LogPath)
-	log.Printf("  - DailyRotation: %v", loggerConfig.DailyRotation)
 }
 
 // initI18n initializes internationalization
@@ -123,6 +112,25 @@ func initI18n() {
 func initValidation() {
 	validator.InitValidationMessages(i18n.GetTranslator())
 	logger.Info("Validation messages initialized successfully")
+}
+
+// initActionEvents initializes action events
+func initActionEvents() {
+	actionEventConfig := config.LoadActionEventConfig()
+	if !actionEventConfig.Enabled {
+		logger.Info("Action events disabled")
+		return
+	}
+
+	// Create Loki client
+	lokiClient := actionEvent.NewLokiClient(actionEventConfig.LokiURL, map[string]string{
+		"environment": actionEventConfig.Environment,
+		"host":        "apicore",
+	})
+
+	// Initialize action event service
+	actionEvent.Init(lokiClient)
+	logger.Info("Action events initialized successfully")
 }
 
 // initDatabase connects to the database

@@ -96,7 +96,7 @@ func (h *Handler) Store(w http.ResponseWriter, r *http.Request) {
 		Email: input.Email,
 	}
 
-	created, err := h.service.Create(u, avatarFile)
+	created, err := h.service.Create(r.Context(), u, avatarFile)
 	if err != nil {
 		response.InternalServerError(w, lang, response.CodeInternalServerError)
 		return
@@ -131,7 +131,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		Avatar: input.Avatar,
 	}
 
-	updated, err := h.service.Update(id, u, avatarFile)
+	updated, err := h.service.Update(r.Context(), id, u, avatarFile)
 	if err != nil {
 		response.InternalServerError(w, lang, response.CodeInternalServerError)
 		return
@@ -145,7 +145,7 @@ func (h *Handler) Destroy(w http.ResponseWriter, r *http.Request) {
 	lang := i18n.GetLanguageFromContext(r.Context())
 	id := chi.URLParam(r, "id")
 
-	if err := h.service.Delete(id); err != nil {
+	if err := h.service.Delete(r.Context(), id); err != nil {
 		response.InternalServerError(w, lang, response.CodeInternalServerError)
 		return
 	}

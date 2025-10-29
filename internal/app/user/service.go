@@ -82,9 +82,7 @@ func (s *Service) GetByID(id string) (*model.User, error) {
 }
 
 // Create tạo user mới
-func (s *Service) Create(user model.User, avatarFile *multipart.FileHeader) (*model.User, error) {
-	ctx := context.Background()
-
+func (s *Service) Create(ctx context.Context, user model.User, avatarFile *multipart.FileHeader) (*model.User, error) {
 	// Upload avatar nếu có
 	if avatarFile != nil {
 		uploadOptions := storage.GetImageUploadOptions(300, 300, 90) // 300x300, quality 90
@@ -116,8 +114,7 @@ func (s *Service) Create(user model.User, avatarFile *multipart.FileHeader) (*mo
 }
 
 // Update cập nhật user
-func (s *Service) Update(id string, user model.User, avatarFile *multipart.FileHeader) (*model.User, error) {
-	ctx := context.Background()
+func (s *Service) Update(ctx context.Context, id string, user model.User, avatarFile *multipart.FileHeader) (*model.User, error) {
 	userID, err := uuid.Parse(id)
 	if err != nil {
 		return nil, err
@@ -174,8 +171,7 @@ func (s *Service) Update(id string, user model.User, avatarFile *multipart.FileH
 }
 
 // Delete xóa user
-func (s *Service) Delete(id string) error {
-	ctx := context.Background()
+func (s *Service) Delete(ctx context.Context, id string) error {
 	userID, err := uuid.Parse(id)
 	if err != nil {
 		return err
