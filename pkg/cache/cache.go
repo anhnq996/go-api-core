@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/redis/go-redis/v9"
+	"github.com/go-redis/redis/v8"
 )
 
 // Cache interface định nghĩa các operations
@@ -26,6 +26,9 @@ type Cache interface {
 	HGetAll(ctx context.Context, key string) (map[string]string, error)
 	HDel(ctx context.Context, key string, fields ...string) error
 	HExists(ctx context.Context, key string, field string) (bool, error)
+
+	// Redis client access for rate limiting
+	GetRedisClient() *redis.Client
 
 	// Set operations
 	SAdd(ctx context.Context, key string, members ...interface{}) error

@@ -1,11 +1,11 @@
 package user
 
 import (
-	model "anhnq/api-core/internal/models"
-	repository "anhnq/api-core/internal/repositories"
-	"anhnq/api-core/pkg/cache"
-	"anhnq/api-core/pkg/storage"
-	"anhnq/api-core/pkg/utils"
+	model "api-core/internal/models"
+	repository "api-core/internal/repositories"
+	"api-core/pkg/cache"
+	"api-core/pkg/storage"
+	"api-core/pkg/utils"
 
 	"context"
 	"fmt"

@@ -12,7 +12,7 @@ import (
 	"io"
 	"strings"
 
-	"anhnq/api-core/pkg/storage/interfaces"
+	"api-core/pkg/storage/interfaces"
 
 	"github.com/disintegration/imaging"
 )

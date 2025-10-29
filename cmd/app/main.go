@@ -8,18 +8,18 @@ import (
 	"os"
 	"path/filepath"
 
-	"anhnq/api-core/config"
-	"anhnq/api-core/internal/routes"
-	"anhnq/api-core/internal/schedules"
-	"anhnq/api-core/internal/wire"
-	"anhnq/api-core/pkg/cache"
-	"anhnq/api-core/pkg/cron"
-	"anhnq/api-core/pkg/exception"
-	"anhnq/api-core/pkg/i18n"
-	"anhnq/api-core/pkg/logger"
-	middlewarePkg "anhnq/api-core/pkg/middleware"
-	socketPkg "anhnq/api-core/pkg/socket"
-	"anhnq/api-core/pkg/validator"
+	"api-core/config"
+	"api-core/internal/routes"
+	"api-core/internal/schedules"
+	"api-core/internal/wire"
+	"api-core/pkg/cache"
+	"api-core/pkg/cron"
+	"api-core/pkg/exception"
+	"api-core/pkg/i18n"
+	"api-core/pkg/logger"
+	middlewarePkg "api-core/pkg/middleware"
+	socketPkg "api-core/pkg/socket"
+	"api-core/pkg/validator"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -215,10 +215,9 @@ func setupRouter(controllers *routes.Controllers, socketHub *socketPkg.Hub) *chi
 	r := chi.NewRouter()
 
 	// Middleware
-	r.Use(middleware.RequestID)         // Tạo unique ID cho mỗi request
-	r.Use(exception.RecoveryMiddleware) // Recover từ panic với custom exception handling
-	r.Use(logger.Middleware())          // Log requests/responses với đầy đủ thông tin
-	r.Use(i18n.Middleware)              // Tự động detect và set language vào context
+	r.Use(middleware.RequestID) // Tạo unique ID cho mỗi request
+	r.Use(logger.Middleware())  // Log requests/responses với đầy đủ thông tin
+	r.Use(i18n.Middleware)      // Tự động detect và set language vào context
 
 	// Custom headers middleware
 	r.Use(middlewarePkg.CORSHeaders())     // CORS headers
@@ -228,6 +227,7 @@ func setupRouter(controllers *routes.Controllers, socketHub *socketPkg.Hub) *chi
 	r.Use(middlewarePkg.CustomHeaders(map[string]string{
 		// Headers will be set from environment variables
 	}))
+	r.Use(exception.RecoveryMiddleware) // Recover từ panic với custom exception handling
 
 	// Setup documentation routes
 	setupDocumentationRoutes(r)

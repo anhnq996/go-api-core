@@ -41,5 +41,6 @@
   "INVALID_PAGE_SIZE": "Invalid page size",
   "LOGIN_SUCCESS": "Login successful",
   "LOGOUT_SUCCESS": "Logout successful",
-  "TOKEN_REFRESHED": "Token refreshed successfully"
+  "TOKEN_REFRESHED": "Token refreshed successfully",
+  "RATE_LIMIT_EXCEEDED": "Rate limit exceeded"
 }

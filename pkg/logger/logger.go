@@ -32,14 +32,13 @@ var Manager *LoggerManager
 
 // Config cấu hình cho logger
 type Config struct {
-	Level          string // debug, info, warn, error
-	Output         string // console, file, loki (có thể kết hợp: "console,file,loki")
-	FilePath       string // đường dẫn file log
-	RequestLogPath string // đường dẫn file log cho requests (mặc định: request.log)
-	LokiURL        string // Loki server URL (ví dụ: http://localhost:3100)
-	EnableCaller   bool   // hiển thị file:line
-	PrettyPrint    bool   // format đẹp cho console
-	DailyRotation  bool   // bật daily rotation cho file logs
+	Level         string // debug, info, warn, error
+	Output        string // console, file, loki (có thể kết hợp: "console,file,loki")
+	LogPath       string // đường dẫn thư mục chứa logs
+	LokiURL       string // Loki server URL (ví dụ: http://localhost:3100)
+	EnableCaller  bool   // hiển thị file:line
+	PrettyPrint   bool   // format đẹp cho console
+	DailyRotation bool   // bật daily rotation cho file logs
 }
 
 // Init khởi tạo logger với config
@@ -71,10 +70,11 @@ func Init(cfg Config) error {
 			var fileWriter io.Writer
 			var err error
 
+			appLogPath := cfg.LogPath + "/app.log"
 			if cfg.DailyRotation {
-				fileWriter, err = getDailyFileWriter(cfg.FilePath)
+				fileWriter, err = getDailyFileWriter(appLogPath)
 			} else {
-				fileWriter, err = getFileWriter(cfg.FilePath)
+				fileWriter, err = getFileWriter(appLogPath)
 			}
 
 			if err != nil {
@@ -118,10 +118,10 @@ func Init(cfg Config) error {
 			requestWriters = append(requestWriters, getConsoleWriter(cfg.PrettyPrint))
 		case "file":
 			// Sử dụng RequestLogPath nếu có, nếu không thì dùng FilePath
-			requestLogPath := cfg.RequestLogPath
+			requestLogPath := cfg.LogPath + "/request.log"
 			if requestLogPath == "" {
 				// Tạo tên file request từ FilePath
-				dir := filepath.Dir(cfg.FilePath)
+				dir := filepath.Dir(cfg.LogPath)
 				requestLogPath = filepath.Join(dir, "request.log")
 			}
 

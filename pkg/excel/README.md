@@ -16,7 +16,7 @@ Package excel provides comprehensive Excel and CSV import/export functionality w
 ### Basic Excel Export
 
 ```go
-import "anhnq/api-core/pkg/excel"
+import "api-core/pkg/excel"
 
 type User struct {
     ID        int       `json:"id" excel:"ID"`

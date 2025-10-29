@@ -3,10 +3,10 @@ package auth
 import (
 	"net/http"
 
-	"anhnq/api-core/pkg/i18n"
-	"anhnq/api-core/pkg/jwt"
-	"anhnq/api-core/pkg/response"
-	"anhnq/api-core/pkg/validator"
+	"api-core/pkg/i18n"
+	"api-core/pkg/jwt"
+	"api-core/pkg/response"
+	"api-core/pkg/validator"
 
 	"github.com/google/uuid"
 )

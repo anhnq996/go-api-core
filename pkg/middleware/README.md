@@ -9,7 +9,7 @@ Package này cung cấp các middleware hữu ích cho ứng dụng ApiCore.
 Thêm custom headers vào response:
 
 ```go
-import "anhnq/api-core/pkg/middleware"
+import "api-core/pkg/middleware"
 
 // Thêm custom headers
 r.Use(middleware.CustomHeaders(map[string]string{
@@ -24,7 +24,7 @@ r.Use(middleware.CustomHeaders(map[string]string{
 Thêm CORS headers vào response:
 
 ```go
-import "anhnq/api-core/pkg/middleware"
+import "api-core/pkg/middleware"
 
 // Thêm CORS headers
 r.Use(middleware.CORSHeaders())
@@ -35,7 +35,7 @@ r.Use(middleware.CORSHeaders())
 Thêm security headers vào response:
 
 ```go
-import "anhnq/api-core/pkg/middleware"
+import "api-core/pkg/middleware"
 
 // Thêm security headers
 r.Use(middleware.SecurityHeaders())

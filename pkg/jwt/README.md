@@ -26,7 +26,7 @@ go get github.com/golang-jwt/jwt/v5
 
 ```go
 import (
-    "anhnq/api-core/pkg/jwt"
+    "api-core/pkg/jwt"
     "time"
 )
 
@@ -199,8 +199,8 @@ func GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 
 ```go
 import (
-    "anhnq/api-core/pkg/cache"
-    "anhnq/api-core/pkg/jwt"
+    "api-core/pkg/cache"
+    "api-core/pkg/jwt"
 )
 
 // Tạo blacklist với cache

@@ -16,7 +16,7 @@ Package exception provides comprehensive error handling with stack traces, conte
 ### Basic Exception Creation
 
 ```go
-import "anhnq/api-core/pkg/exception"
+import "api-core/pkg/exception"
 
 // Create a simple exception
 ex := exception.New("Something went wrong")
@@ -60,7 +60,7 @@ panic(exception.ErrBadRequest.WithContext("field", "email"))
 ```go
 import (
     "github.com/go-chi/chi/v5"
-    "anhnq/api-core/pkg/exception"
+    "api-core/pkg/exception"
 )
 
 func main() {

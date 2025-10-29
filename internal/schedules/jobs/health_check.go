@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"anhnq/api-core/pkg/logger"
+	"api-core/pkg/logger"
 )
 
 // HealthCheckJob kiểm tra health của các services

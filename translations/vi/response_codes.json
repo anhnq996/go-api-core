@@ -41,5 +41,6 @@
   "INVALID_PAGE_SIZE": "Kích thước trang không hợp lệ",
   "LOGIN_SUCCESS": "Đăng nhập thành công",
   "LOGOUT_SUCCESS": "Đăng xuất thành công",
-  "TOKEN_REFRESHED": "Làm mới token thành công"
+  "TOKEN_REFRESHED": "Làm mới token thành công",
+  "RATE_LIMIT_EXCEEDED": "Vượt quá giới hạn yêu cầu"
 }

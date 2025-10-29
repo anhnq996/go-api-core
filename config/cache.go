@@ -1,10 +1,10 @@
 package config
 
 import (
-	"anhnq/api-core/pkg/cache"
+	"api-core/pkg/cache"
 	"fmt"
 
-	"anhnq/api-core/pkg/utils"
+	"api-core/pkg/utils"
 )
 
 // CacheConfig cấu hình cache

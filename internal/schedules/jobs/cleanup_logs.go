@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"anhnq/api-core/pkg/logger"
+	"api-core/pkg/logger"
 )
 
 // CleanupLogsJob xóa log files cũ

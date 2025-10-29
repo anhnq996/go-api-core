@@ -1,7 +1,7 @@
 package config
 
 import (
-	"anhnq/api-core/pkg/utils"
+	"api-core/pkg/utils"
 )
 
 // CORSConfig holds CORS configuration

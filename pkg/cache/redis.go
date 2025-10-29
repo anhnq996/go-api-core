@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/redis/go-redis/v9"
+	"github.com/go-redis/redis/v8"
 )
 
 // Config cấu hình Redis
@@ -36,6 +36,11 @@ func NewRedisCache(cfg Config) (Cache, error) {
 	}
 
 	return &redisCache{client: client}, nil
+}
+
+// GetRedisClient returns the underlying Redis client
+func (c *redisCache) GetRedisClient() *redis.Client {
+	return c.client
 }
 
 // Basic Operations

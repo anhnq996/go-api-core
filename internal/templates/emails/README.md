@@ -45,7 +45,7 @@ Thư mục này chứa các email templates cho ApiCore application.
 package main
 
 import (
-    "anhnq/api-core/pkg/email"
+    "api-core/pkg/email"
 )
 
 func main() {

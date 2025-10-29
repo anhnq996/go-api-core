@@ -30,8 +30,8 @@ import (
     "context"
     "log"
 
-    "anhnq/api-core/internal/schedules"
-    "anhnq/api-core/pkg/cron"
+    "api-core/internal/schedules"
+    "api-core/pkg/cron"
     "github.com/go-redis/redis/v8"
 )
 
@@ -149,7 +149,7 @@ package jobs
 import (
     "context"
     "time"
-    "anhnq/api-core/pkg/logger"
+    "api-core/pkg/logger"
 )
 
 type MyNewJob struct{}

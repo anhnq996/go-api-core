@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"anhnq/api-core/pkg/logger"
+	"api-core/pkg/logger"
 )
 
 // GenerateReportsJob tạo reports định kỳ

@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	"anhnq/api-core/pkg/utils"
+	"api-core/pkg/utils"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

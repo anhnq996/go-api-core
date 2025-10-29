@@ -67,7 +67,7 @@ package main
 
 import (
     "log"
-    "anhnq/api-core/pkg/email"
+    "api-core/pkg/email"
 )
 
 func main() {

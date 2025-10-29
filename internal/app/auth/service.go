@@ -5,10 +5,10 @@ import (
 	"errors"
 	"time"
 
-	model "anhnq/api-core/internal/models"
-	repository "anhnq/api-core/internal/repositories"
-	"anhnq/api-core/pkg/jwt"
-	"anhnq/api-core/pkg/utils"
+	model "api-core/internal/models"
+	repository "api-core/internal/repositories"
+	"api-core/pkg/jwt"
+	"api-core/pkg/utils"
 
 	"github.com/google/uuid"
 )

@@ -64,6 +64,9 @@ const (
 	CodeLoginSuccess   = "LOGIN_SUCCESS"
 	CodeLogoutSuccess  = "LOGOUT_SUCCESS"
 	CodeTokenRefreshed = "TOKEN_REFRESHED"
+
+	// Rate limit
+	CodeRateLimitExceeded = "RATE_LIMIT_EXCEEDED"
 )
 
 // GetHTTPStatusCode trả về HTTP status code tương ứng với response code
@@ -124,6 +127,9 @@ func GetHTTPStatusCode(code string) int {
 		// Pagination
 		CodeInvalidPage:     400,
 		CodeInvalidPageSize: 400,
+
+		// Rate limit
+		CodeRateLimitExceeded: 429,
 	}
 
 	if status, ok := statusMap[code]; ok {

@@ -1,8 +1,8 @@
-module anhnq/api-core
+module api-core
 
-go 1.24.0
+go 1.25.0
 
-toolchain go1.24.9
+toolchain go1.25.3
 
 require (
 	firebase.google.com/go/v4 v4.18.0
@@ -12,7 +12,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.88.6
 	github.com/disintegration/imaging v1.6.2
 	github.com/go-chi/chi/v5 v5.2.3
-	github.com/go-chi/cors v1.2.2
 	github.com/go-playground/validator/v10 v10.28.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt/v5 v5.3.0
@@ -22,7 +21,6 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/joho/godotenv v1.5.1
 	github.com/rabbitmq/amqp091-go v1.10.0
-	github.com/redis/go-redis/v9 v9.14.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/zerolog v1.34.0
 	github.com/xuri/excelize/v2 v2.10.0

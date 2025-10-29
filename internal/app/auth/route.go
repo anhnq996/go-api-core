@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"anhnq/api-core/pkg/jwt"
+	"api-core/pkg/jwt"
 
 	"github.com/go-chi/chi/v5"
 )

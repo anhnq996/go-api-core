@@ -195,7 +195,7 @@ package user_test
 
 import (
     "testing"
-    "anhnq/api-core/internal/app/user"
+    "api-core/internal/app/user"
 )
 
 func TestGetUser(t *testing.T) {

@@ -30,7 +30,7 @@ translations/
 package main
 
 import (
-    "anhnq/api-core/pkg/i18n"
+    "api-core/pkg/i18n"
     "log"
 )
 
@@ -54,7 +54,7 @@ func main() {
 ### Basic Translation
 
 ```go
-import "anhnq/api-core/pkg/i18n"
+import "api-core/pkg/i18n"
 
 // Translate một code
 message := i18n.T("en", "SUCCESS")
@@ -94,7 +94,7 @@ Middleware tự động detect language và lưu vào context:
 ```go
 import (
     "github.com/go-chi/chi/v5"
-    "anhnq/api-core/pkg/i18n"
+    "api-core/pkg/i18n"
 )
 
 func main() {

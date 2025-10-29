@@ -54,8 +54,8 @@ STORAGE_MAX_FILE_SIZE=10485760  # 10MB
 
 ```go
 import (
-    "anhnq/api-core/config"
-    "anhnq/api-core/pkg/storage"
+    "api-core/config"
+    "api-core/pkg/storage"
 )
 
 // Lấy config

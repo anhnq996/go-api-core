@@ -1,7 +1,7 @@
 package seeders
 
 import (
-	model "anhnq/api-core/internal/models"
+	model "api-core/internal/models"
 
 	"gorm.io/gorm"
 )

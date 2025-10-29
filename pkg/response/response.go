@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"anhnq/api-core/pkg/i18n"
+	"api-core/pkg/i18n"
 )
 
 // Response là cấu trúc chuẩn cho API response
@@ -112,7 +112,7 @@ func Error(w http.ResponseWriter, lang, code string, errors interface{}, statusC
 		status = statusCode[0]
 	}
 
-	message := i18n.T(lang, code)
+	message := i18n.T(lang, "response_codes."+code)
 
 	response := Response{
 		Success: false,

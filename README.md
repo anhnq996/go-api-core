@@ -656,8 +656,6 @@ make help             # Show available commands
 - [ ] Thêm unit tests
 - [ ] Thêm integration tests
 - [ ] Thêm rate limiting với Redis
-- [ ] Thêm CORS support
-- [ ] Thêm CI/CD pipeline (GitHub Actions)
 
 ## 🤝 Contributing
 

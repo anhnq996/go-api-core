@@ -47,7 +47,7 @@ func (dl *DynamicLogger) GetLogger(name string) zerolog.Logger {
 
 	// Create new logger with custom file path
 	config := dl.defaultConfig
-	config.FilePath = filepath.Join(filepath.Dir(config.FilePath), name+".log")
+	config.LogPath = filepath.Join(config.LogPath, name+".log")
 
 	logger := dl.createLogger(config)
 	dl.loggers[name] = logger
@@ -84,18 +84,35 @@ func (dl *DynamicLogger) createLogger(config Config) zerolog.Logger {
 		case "console":
 			writers = append(writers, getConsoleWriter(config.PrettyPrint))
 		case "file":
-			if config.FilePath != "" {
+			if config.LogPath != "" {
 				var fileWriter io.Writer
 				var err error
 
 				if config.DailyRotation {
-					fileWriter, err = getDailyFileWriter(config.FilePath)
+					fileWriter, err = getDailyFileWriter(config.LogPath)
 				} else {
-					fileWriter, err = getFileWriter(config.FilePath)
+					fileWriter, err = getFileWriter(config.LogPath)
 				}
 
 				if err == nil {
 					writers = append(writers, fileWriter)
+				}
+			}
+		case "loki":
+			if config.LokiURL != "" {
+				// Extract job name from log path or use default
+				jobName := "apicore"
+				if config.LogPath != "" {
+					// Extract job name from filename (e.g., "exception.log" -> "exception")
+					filename := filepath.Base(config.LogPath)
+					if strings.HasSuffix(filename, ".log") {
+						jobName = strings.TrimSuffix(filename, ".log")
+					}
+				}
+
+				lokiWriter, err := getLokiWriterWithJob(config.LokiURL, jobName)
+				if err == nil {
+					writers = append(writers, lokiWriter)
 				}
 			}
 		}

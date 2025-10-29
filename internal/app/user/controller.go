@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"time"
 
-	model "anhnq/api-core/internal/models"
-	"anhnq/api-core/pkg/excel"
-	"anhnq/api-core/pkg/i18n"
-	"anhnq/api-core/pkg/response"
-	"anhnq/api-core/pkg/utils"
-	"anhnq/api-core/pkg/validator"
+	model "api-core/internal/models"
+	"api-core/pkg/excel"
+	"api-core/pkg/i18n"
+	"api-core/pkg/response"
+	"api-core/pkg/utils"
+	"api-core/pkg/validator"
 
 	"github.com/go-chi/chi/v5"
 )

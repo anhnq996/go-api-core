@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"anhnq/api-core/pkg/logger"
-	"anhnq/api-core/pkg/utils"
+	"api-core/pkg/logger"
+	"api-core/pkg/utils"
 )
 
 // LoggerConfig cấu hình cho logger
@@ -63,14 +63,13 @@ func (c *LoggerConfig) Validate() error {
 // ToLoggerConfig convert sang logger.Config
 func (c *LoggerConfig) ToLoggerConfig() logger.Config {
 	return logger.Config{
-		Level:          c.Level,
-		Output:         c.Output,
-		FilePath:       c.LogPath + "/app.log",
-		RequestLogPath: c.LogPath + "/request.log",
-		LokiURL:        c.LokiURL,
-		EnableCaller:   c.EnableCaller,
-		PrettyPrint:    c.PrettyPrint,
-		DailyRotation:  c.DailyRotation,
+		Level:         c.Level,
+		Output:        c.Output,
+		LogPath:       c.LogPath,
+		LokiURL:       c.LokiURL,
+		EnableCaller:  c.EnableCaller,
+		PrettyPrint:   c.PrettyPrint,
+		DailyRotation: c.DailyRotation,
 	}
 }
 

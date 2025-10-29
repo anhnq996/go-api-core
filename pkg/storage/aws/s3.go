@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"anhnq/api-core/pkg/storage/interfaces"
+	"api-core/pkg/storage/interfaces"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"

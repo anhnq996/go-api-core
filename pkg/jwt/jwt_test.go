@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"anhnq/api-core/pkg/jwt"
+	"api-core/pkg/jwt"
 )
 
 func TestGenerateAndVerifyToken(t *testing.T) {

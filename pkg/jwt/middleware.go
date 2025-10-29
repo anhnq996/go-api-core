@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"anhnq/api-core/pkg/i18n"
-	"anhnq/api-core/pkg/response"
+	"api-core/pkg/i18n"
+	"api-core/pkg/response"
 )
 
 // contextKey là kiểu để lưu claims vào context

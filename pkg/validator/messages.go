@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"anhnq/api-core/pkg/i18n"
+	"api-core/pkg/i18n"
 
 	"github.com/go-playground/validator/v10"
 )

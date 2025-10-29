@@ -207,8 +207,8 @@ type UpdateUserRequest struct {
 package user
 
 import (
-    "anhnq/api-core/pkg/validator"
-    "anhnq/api-core/pkg/response"
+    "api-core/pkg/validator"
+    "api-core/pkg/response"
 )
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
@@ -237,7 +237,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 Nếu không muốn auto response:
 
 ```go
-import "anhnq/api-core/pkg/validator"
+import "api-core/pkg/validator"
 
 func Handler(w http.ResponseWriter, r *http.Request) {
     var input LoginRequest

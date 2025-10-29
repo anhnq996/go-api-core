@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"anhnq/api-core/config"
-	"anhnq/api-core/database"
-	"anhnq/api-core/database/seeders"
+	"api-core/config"
+	"api-core/database"
+	"api-core/database/seeders"
 
 	"gorm.io/gorm"
 )

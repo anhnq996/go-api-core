@@ -24,7 +24,7 @@ Package đã được tích hợp sẵn trong project.
 ### Khởi tạo Logger
 
 ```go
-import "anhnq/api-core/pkg/logger"
+import "api-core/pkg/logger"
 
 func main() {
     // Khởi tạo logger
@@ -94,7 +94,7 @@ storages/logs/
 ### Basic Logging
 
 ```go
-import "anhnq/api-core/pkg/logger"
+import "api-core/pkg/logger"
 
 // Info
 logger.Info("Application started")
@@ -144,7 +144,7 @@ Middleware nhẹ nhất, chỉ log thông tin cơ bản. **Khuyến nghị cho p
 
 ```go
 import (
-    "anhnq/api-core/pkg/logger"
+    "api-core/pkg/logger"
     "github.com/go-chi/chi/v5"
 )
 
@@ -238,7 +238,7 @@ r.Use(logger.MiddlewareWithConfig(logger.DefaultMiddlewareConfig))
 ### Logging trong Handlers
 
 ```go
-import "anhnq/api-core/pkg/logger"
+import "api-core/pkg/logger"
 
 func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
     // Log basic

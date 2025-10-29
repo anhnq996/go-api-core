@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 )
 
 // noopCache implements Cache interface but does nothing (no-op)
@@ -13,6 +15,11 @@ type noopCache struct{}
 // NewNoopCache tạo no-op cache (fallback khi Redis không có)
 func NewNoopCache() Cache {
 	return &noopCache{}
+}
+
+// GetRedisClient returns nil for noop cache
+func (c *noopCache) GetRedisClient() *redis.Client {
+	return nil
 }
 
 var ErrCacheNotAvailable = errors.New("cache not available")

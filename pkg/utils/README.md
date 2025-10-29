@@ -9,7 +9,7 @@ Package chứa các utility functions thường dùng cho backend REST API.
 Xử lý string operations.
 
 ```go
-import "anhnq/api-core/pkg/utils"
+import "api-core/pkg/utils"
 
 // Slug generation
 slug := utils.Slug("Hello World Tiếng Việt")

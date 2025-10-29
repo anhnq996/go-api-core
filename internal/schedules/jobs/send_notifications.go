@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"anhnq/api-core/pkg/logger"
+	"api-core/pkg/logger"
 )
 
 // SendNotificationsJob gửi notifications

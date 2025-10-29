@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	model "anhnq/api-core/internal/models"
+	model "api-core/internal/models"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"

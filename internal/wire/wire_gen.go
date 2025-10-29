@@ -7,11 +7,11 @@
 package wire
 
 import (
-	"anhnq/api-core/internal/app/auth"
-	"anhnq/api-core/internal/app/user"
-	"anhnq/api-core/internal/repositories"
-	"anhnq/api-core/internal/routes"
-	"anhnq/api-core/pkg/cache"
+	"api-core/internal/app/auth"
+	"api-core/internal/app/user"
+	"api-core/internal/repositories"
+	"api-core/internal/routes"
+	"api-core/pkg/cache"
 	"gorm.io/gorm"
 )
 
@@ -30,6 +30,14 @@ func InitializeApp(db *gorm.DB, cacheClient cache.Cache) (*routes.Controllers, e
 	blacklist := ProvideJWTBlacklist(cacheClient)
 	authService := auth.NewService(userRepository, manager, blacklist)
 	authHandler := auth.NewHandler(authService)
-	controllers := routes.NewControllers(handler, authHandler, manager, blacklist)
+	cacheInterface := ProvideCacheInterface(cacheClient)
+	controllers := routes.NewControllers(handler, authHandler, manager, blacklist, cacheInterface)
 	return controllers, nil
+}
+
+// wire.go:
+
+// ProvideCacheInterface provides cache interface for rate limiting
+func ProvideCacheInterface(cacheClient cache.Cache) routes.CacheInterface {
+	return cacheClient
 }

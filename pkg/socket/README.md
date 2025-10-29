@@ -18,7 +18,7 @@ Package socket provides WebSocket functionality with room management, broadcasti
 ```go
 import (
     "net/http"
-    "anhnq/api-core/pkg/socket"
+    "api-core/pkg/socket"
 )
 
 func main() {

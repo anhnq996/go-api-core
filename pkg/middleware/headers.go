@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"anhnq/api-core/pkg/utils"
+	"api-core/pkg/utils"
 )
 
 // CustomHeaders middleware adds custom headers to responses

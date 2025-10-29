@@ -66,8 +66,8 @@ Trong `main.go`:
 
 ```go
 import (
-    "anhnq/api-core/pkg/i18n"
-    "anhnq/api-core/pkg/response"
+    "api-core/pkg/i18n"
+    "api-core/pkg/response"
 )
 
 func main() {
@@ -99,7 +99,7 @@ translations/
 
 ```go
 import (
-    "anhnq/api-core/pkg/response"
+    "api-core/pkg/response"
 )
 
 func GetUser(w http.ResponseWriter, r *http.Request) {

@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"anhnq/api-core/internal/schedules/jobs"
-	"anhnq/api-core/pkg/cron"
+	"api-core/internal/schedules/jobs"
+	"api-core/pkg/cron"
 )
 
 // JobWrapper wraps jobs.Job to implement cron.Job interface
@@ -77,9 +77,9 @@ func NewScheduleManager(lockManager cron.LockManager) *ScheduleManager {
 func (sm *ScheduleManager) RegisterAllJobs() error {
 	// Cron expression cho các jobs
 	jobCron := map[string]string{
-		"cleanup-logs":       "0 0 * * *",    // Mỗi ngày lúc 0h
-		"cleanup-temp-files": "0 0 * * *",    // Mỗi ngày lúc 0h
-		"health-check":       "0 * * * *",    // Mỗi giờ
+		"cleanup-logs":       "0 0 * * *", // Mỗi ngày lúc 0h
+		"cleanup-temp-files": "0 0 * * *", // Mỗi ngày lúc 0h
+		"health-check":       "0 * * * *", // Mỗi giờ
 	}
 
 	// Đăng ký các jobs

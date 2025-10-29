@@ -4,11 +4,11 @@
 package wire
 
 import (
-	"anhnq/api-core/internal/app/auth"
-	"anhnq/api-core/internal/app/user"
-	repository "anhnq/api-core/internal/repositories"
-	"anhnq/api-core/internal/routes"
-	"anhnq/api-core/pkg/cache"
+	"api-core/internal/app/auth"
+	"api-core/internal/app/user"
+	repository "api-core/internal/repositories"
+	"api-core/internal/routes"
+	"api-core/pkg/cache"
 
 	"github.com/google/wire"
 	"gorm.io/gorm"
@@ -37,7 +37,15 @@ func InitializeApp(db *gorm.DB, cacheClient cache.Cache) (*routes.Controllers, e
 
 		// Controllers
 		routes.NewControllers,
+
+		// Cache interface
+		ProvideCacheInterface,
 	)
 
 	return nil, nil // Wire sẽ thay thế dòng này
+}
+
+// ProvideCacheInterface provides cache interface for rate limiting
+func ProvideCacheInterface(cacheClient cache.Cache) routes.CacheInterface {
+	return cacheClient
 }

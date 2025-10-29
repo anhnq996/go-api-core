@@ -4,10 +4,10 @@ import (
 	"os"
 	"time"
 
-	"anhnq/api-core/config"
-	"anhnq/api-core/pkg/cache"
-	"anhnq/api-core/pkg/jwt"
-	"anhnq/api-core/pkg/storage"
+	"api-core/config"
+	"api-core/pkg/cache"
+	"api-core/pkg/jwt"
+	"api-core/pkg/storage"
 )
 
 // ProvideJWTManager provides JWT manager

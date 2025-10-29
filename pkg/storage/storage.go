@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"anhnq/api-core/config"
-	"anhnq/api-core/pkg/storage/aws"
-	"anhnq/api-core/pkg/storage/image"
-	"anhnq/api-core/pkg/storage/interfaces"
-	"anhnq/api-core/pkg/storage/local"
-	"anhnq/api-core/pkg/storage/validator"
+	"api-core/config"
+	"api-core/pkg/storage/aws"
+	"api-core/pkg/storage/image"
+	"api-core/pkg/storage/interfaces"
+	"api-core/pkg/storage/local"
+	"api-core/pkg/storage/validator"
 
 	"github.com/google/uuid"
 )

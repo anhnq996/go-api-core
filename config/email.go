@@ -3,8 +3,8 @@ package config
 import (
 	"fmt"
 
-	"anhnq/api-core/pkg/email"
-	"anhnq/api-core/pkg/utils"
+	"api-core/pkg/email"
+	"api-core/pkg/utils"
 )
 
 // EmailConfig cấu hình cho email service
