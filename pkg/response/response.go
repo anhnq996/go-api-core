@@ -46,7 +46,7 @@ func Success(w http.ResponseWriter, lang, code string, data interface{}, statusC
 		status = statusCode[0]
 	}
 
-	message := i18n.T(lang, code)
+	message := i18n.T(lang, "response_codes."+code)
 
 	response := Response{
 		Success: true,
@@ -66,7 +66,7 @@ func SuccessWithMeta(w http.ResponseWriter, lang, code string, data interface{},
 		status = statusCode[0]
 	}
 
-	message := i18n.T(lang, code)
+	message := i18n.T(lang, "response_codes."+code)
 
 	response := Response{
 		Success: true,
@@ -87,7 +87,7 @@ func Created(w http.ResponseWriter, lang, code string, data interface{}, statusC
 		status = statusCode[0]
 	}
 
-	message := i18n.T(lang, code)
+	message := i18n.T(lang, "response_codes."+code)
 
 	response := Response{
 		Success: true,
