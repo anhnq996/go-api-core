@@ -12,8 +12,14 @@ import (
 
 // ProvideJWTManager provides JWT manager
 func ProvideJWTManager() *jwt.Manager {
+	// Ưu tiên dùng RSA keys nếu có; fallback sang HMAC nếu thiếu
+	privatePath := getEnv("JWT_PRIVATE_KEY_PATH", "keys/private.pem")
+	publicPath := getEnv("JWT_PUBLIC_KEY_PATH", "keys/public.pem")
+
 	return jwt.NewManager(jwt.Config{
-		SecretKey:            getEnv("JWT_SECRET_KEY", "default-secret-key-change-this-in-production-min-32-chars"),
+		SecretKey:            getEnv("JWT_SECRET_KEY", ""),
+		PrivateKeyPath:       privatePath,
+		PublicKeyPath:        publicPath,
 		AccessTokenDuration:  15 * time.Minute,
 		RefreshTokenDuration: 7 * 24 * time.Hour,
 		Issuer:               "apicore",

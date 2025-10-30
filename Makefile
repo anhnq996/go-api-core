@@ -13,6 +13,7 @@ help:
 	@echo "  make seed          - Run database seeders"
 	@echo "  make migrate-down  - Rollback migrations"
 	@echo "  make fresh         - Fresh setup (drop all + migrate + seed)"
+	@echo "  make migrate-create name=your_migration - Create new migration files (up/down)"
 	@echo ""
 	@echo "  make docker-build  - Build Docker image"
 	@echo "  make docker-up     - Start all services"
@@ -20,6 +21,7 @@ help:
 	@echo ""
 	@echo "  make dev           - Start dev environment (postgres + redis)"
 	@echo "  make setup         - Complete setup (docker + migrate + seed)"
+	@echo "  make gen-keys      - Generate RSA keys to keys/private.pem & keys/public.pem"
 
 # Build binary
 build:
@@ -167,4 +169,24 @@ tidy:
 # Full check (before commit)
 check: fmt lint test
 	@echo "✅ All checks passed"
+
+# Generate RSA keys for JWT
+gen-keys:
+	@echo "Generating RSA keys (2048-bit) to keys/*.pem ..."
+	@go run ./cmd/tools/genkeys
+	@echo "✅ Keys generated"
+
+# Migration create
+migrate-create:
+	@if [ -z "$(name)" ]; then \
+		printf "\n❌ Vui lòng truyền biến name cho migration mới.\n\n  Ví dụ: make migrate-create name=add_products_table\n\n" && exit 1; \
+	fi; \
+	dir=database/migrations; \
+	last=`ls $$dir | grep -E '^[0-9]{6}_.+\.up\.sql$$' | sort | tail -n 1 | sed 's/_.*//'`; \
+	if [ -z "$$last" ]; then num=000001; else num=`printf "%06d" $$((10#$$last + 1))`; fi; \
+	fname=$$num"_$(name)"; \
+	echo "Tạo: $$dir/$$fname.up.sql & .down.sql"; \
+	touch $$dir/$$fname.up.sql $$dir/$$fname.down.sql; \
+	echo "-- Migration: $$fname --\n-- Viết câu lệnh SQL tại đây --" > $$dir/$$fname.up.sql; \
+	echo "-- Rollback: $$fname --\n-- Viết câu lệnh rollback SQL tại đây --" > $$dir/$$fname.down.sql;
 

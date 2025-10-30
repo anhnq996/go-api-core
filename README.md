@@ -23,10 +23,6 @@ make docker-up        # Start full stack
 make docker-logs      # View logs
 make docker-down      # Stop all
 
-# Database
-go run cmd/migrate/main.go up       # Migrations
-go run cmd/migrate/main.go seed     # Seeders
-go run cmd/migrate/main.go version  # Check version
 ```
 
 ## ✨ Tính Năng
@@ -403,36 +399,6 @@ docker build -t apicore:latest .
 docker build -t apicore:v1.0.0 .
 ```
 
-### Run with Docker Compose
-
-```bash
-# Development (only infrastructure)
-docker-compose up -d postgres redis
-
-# Production (full stack with API)
-docker-compose -f docker-compose.prod.yml up -d
-
-# Stop services
-docker-compose down
-
-# Stop and remove volumes
-docker-compose down -v
-```
-
-### Run Migrations in Docker
-
-```bash
-# Method 1: Using migrate tool
-docker exec apicore-api /app/apicore -migrate
-
-# Method 2: Using cmd/migrate
-docker run --rm \
-  --network apicore_monitoring \
-  -e DB_HOST=postgres \
-  apicore:latest \
-  go run cmd/migrate/main.go up
-```
-
 ### Docker Logs
 
 ```bash
@@ -446,19 +412,6 @@ docker logs -f apicore-redis
 
 # Last 100 lines
 docker logs --tail 100 apicore-api
-```
-
-### Connect to Containers
-
-```bash
-# PostgreSQL
-docker exec -it apicore-postgres psql -U postgres -d apicore
-
-# Redis
-docker exec -it apicore-redis redis-cli
-
-# API container shell
-docker exec -it apicore-api sh
 ```
 
 ## 📦 Dependencies
@@ -477,34 +430,11 @@ docker exec -it apicore-api sh
 
 - Request ID tracking
 - Panic recovery
-- Input validation (cần thêm)
-- Rate limiting (TODO)
-- Authentication (TODO)
-- Authorization (TODO)
+- Input validation
+- Rate limiting
+- Authentication
 
 ## 🚀 Deployment
-
-### Build binary
-
-```bash
-go build -o apicore cmd/app/main.go
-```
-
-### Run binary
-
-```bash
-./apicore
-```
-
-### Docker (TODO)
-
-```dockerfile
-FROM golang:1.23-alpine
-WORKDIR /app
-COPY . .
-RUN go build -o apicore cmd/app/main.go
-CMD ["./apicore"]
-```
 
 ## 📋 All Commands Cheat Sheet
 
@@ -532,24 +462,6 @@ go run cmd/app/main.go
 curl http://localhost:3000/api/v1/users
 ```
 
-### Database Management
-
-```bash
-# Using Makefile
-make migrate          # Run all pending migrations
-make migrate-down     # Rollback all migrations
-make migrate-version  # Show current version
-make seed             # Run seeders
-
-# Using migrate CLI (more options)
-go run cmd/migrate/main.go up              # Run migrations
-go run cmd/migrate/main.go down            # Rollback all
-go run cmd/migrate/main.go version         # Show version
-go run cmd/migrate/main.go steps -n 1      # Run 1 step
-go run cmd/migrate/main.go force -version 1  # Force version
-go run cmd/migrate/main.go seed            # Run seeders
-```
-
 ### Build & Deploy
 
 ```bash
@@ -562,8 +474,7 @@ make docker-build     # Build image
 docker images apicore # Check size (~20-30MB)
 
 # Docker run (development)
-docker-compose up -d postgres redis    # Infrastructure only
-go run cmd/app/main.go                 # Run app locally
+docker-compose up -d  # Infrastructure only
 
 # Docker run (production)
 make docker-up        # Start full stack (API + infra)
@@ -583,32 +494,6 @@ GET users:all         # Get cached users
 TTL users:all         # Check TTL
 DEL users:all         # Delete cache
 FLUSHDB               # Clear all cache
-```
-
-### Database Operations
-
-```bash
-# Connect to PostgreSQL
-docker exec -it apicore-postgres psql -U postgres -d apicore
-
-# Inside psql
-\dt                   # List tables
-\d users              # Describe users table
-SELECT * FROM users;  # Query users
-SELECT * FROM schema_migrations;  # Check migration version
-```
-
-### Logs
-
-```bash
-# Application logs
-tail -f storages/logs/app.log
-
-# Docker logs
-make docker-logs                    # All services
-docker logs -f apicore-api          # API only
-docker logs -f apicore-postgres     # PostgreSQL
-docker logs -f apicore-redis        # Redis
 ```
 
 ### Testing
@@ -651,26 +536,6 @@ make install-tools    # Install wire, migrate CLI
 make help             # Show available commands
 ```
 
-## 📝 TODO
-
-- [ ] Thêm unit tests
-- [ ] Thêm integration tests
-- [ ] Thêm rate limiting với Redis
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details
-
 ## 👥 Authors
 
-- Your Name - Initial work
-
-## 🙏 Acknowledgments
-
-- Chi router team
-- Google Wire team
-- Swagger/OpenAPI community
+- AnhNQ
