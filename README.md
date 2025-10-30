@@ -54,46 +54,43 @@ make docker-down      # Stop all
 
 ```
 ApiCore/
+├── bin/                         # Build output
+├── build/
+│   └── docker/
+│       └── entrypoint.sh
 ├── cmd/
-│   └── app/
-│       └── main.go                 # Entry point
+│   ├── app/                     # App entry (main)
+│   │   └── main.go
+│   ├── migrate/                 # Migration CLI
+│   │   └── main.go
+│   └── tools/
+│       └── genkeys/
+│           └── main.go
+├── config/                      # Cấu hình (go)
+├── database/
+│   ├── migrations/              # Migration scripts
+│   └── seeders/                 # Seeder scripts
 ├── internal/
 │   ├── app/
-│   │   └── user/                   # User module
-│   │       ├── controller.go       # HTTP handlers
-│   │       ├── service.go          # Business logic
-│   │       └── route.go            # Routes definition
+│   │   ├── auth/                # Module Auth
+│   │   └── user/                # Module User
 │   ├── models/
-│   │   └── user.go                 # Data models
 │   ├── repositories/
-│   │   ├── repository.go           # Base repository
-│   │   └── user_repository.go      # User repository
 │   ├── routes/
-│   │   └── routes.go               # Routes registry
+│   ├── schedules/
+│   │   └── jobs/
+│   ├── templates/
+│   │   └── emails/
 │   └── wire/
-│       ├── wire.go                 # Wire configuration
-│       └── wire_gen.go             # Generated DI code
-├── pkg/
-│   ├── cache/                      # Redis cache utilities
-│   ├── fcm/                        # Firebase Cloud Messaging
-│   ├── i18n/                       # Internationalization (EN/VI)
-│   ├── jwt/                        # JWT authentication
-│   ├── logger/                     # Structured logging
-│   ├── response/                   # Standardized REST API response
-│   ├── utils/                      # Common helper functions
-│   └── validator/                  # Auto validation với struct tags
-├── translations/
-│   ├── en.json                     # English translations
-│   └── vi.json                     # Vietnamese translations
-├── docs/
-│   ├── index.html                  # Documentation home
-│   ├── swagger.html                # Swagger UI
-│   ├── swagger.json                # OpenAPI specification
-│   ├── routes.md                   # Routes guide
-│   ├── swagger-guide.md            # Swagger usage guide
-│   └── response-and-i18n-guide.md  # Response & I18n guide
-├── go.mod
-└── go.sum
+├── keys/                        # JWT keys (.gitignore)
+├── pkg/                         # Lib tái sử dụng (cache, jwt, logger...)
+├── storages/                    # File lưu hoặc logs
+├── test/                        # Code test
+├── translations/                # Dịch thuật
+├── docs/                        # Tài liệu, swagger
+├── Dockerfile*
+├── Makefile
+└── README.md
 ```
 
 ## 🚀 Quick Start
@@ -108,53 +105,55 @@ ApiCore/
 
 1. **Clone repository**
 
-```bash
-git clone <repository-url>
-cd ApiCore
-```
+    ```bash
+    git clone <repository-url>
+    cd ApiCore
+    ```
 
-2. **Cài đặt dependencies**
+2. **Install dependencies**
+    ```bash
+    go mod download
+    ```
 
-```bash
-go mod download
-```
+3. **(Optional, if not available) Install Wire CLI**
+    ```bash
+    go install github.com/google/wire/cmd/wire@latest
+    ```
 
-3. **Cài đặt Wire CLI** (nếu chưa có)
+4. **Prepare environment config**
+    ```bash
+    cp env.example .env
+    # Edit .env for your database/Redis as needed
+    ```
 
-```bash
-go install github.com/google/wire/cmd/wire@latest
-```
+5. **Generate RSA keys for JWT (one time only)**
+    ```bash
+    make gen-keys
+    # Output: keys/private.pem & keys/public.pem
+    ```
 
-4. **Setup environment**
+6. **Start infrastructure (PostgreSQL + Redis)**
+    ```bash
+    make dev
+    # Wait a few seconds for services to be ready
+    ```
 
-```bash
-cp env.example .env
-# Điều chỉnh database config trong .env
-```
+7. **Run migrations and seed database**
+    ```bash
+    make migrate
+    make seed
+    ```
 
-5. **Start PostgreSQL**
+8. **Run the application**
+    ```bash
+    make run
+    # or for hot reload (recommended during dev):
+    make watch
+    ```
 
-```bash
-docker-compose up -d postgres
-```
+**Note:** All important commands are defined in the Makefile for easy usage during both development and production.
 
-6. **Run migrations**
-
-```bash
-go run cmd/migrate/main.go up
-```
-
-7. **Run seeders** (optional - tạo dữ liệu mẫu)
-
-```bash
-go run cmd/migrate/main.go seed
-```
-
-8. **Start server**
-
-```bash
-go run cmd/app/main.go
-```
+---
 
 ## 📚 Documentation
 
