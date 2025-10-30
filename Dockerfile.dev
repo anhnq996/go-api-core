@@ -1,0 +1,30 @@
+# Dev image with hot-reload (air)
+FROM golang:1.25.3-alpine
+
+# Install tools
+RUN apk add --no-cache git bash build-base make tzdata
+
+# Add go bin to PATH for air
+ENV PATH=$PATH:/go/bin
+
+WORKDIR /app
+
+# Cache modules
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source
+COPY . .
+COPY build/docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Install air (hot reload)
+RUN go install github.com/air-verse/air@latest
+
+EXPOSE 3000
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+# Start in watch mode
+CMD ["make", "watch"]
+
+

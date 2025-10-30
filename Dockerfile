@@ -52,14 +52,14 @@ COPY --from=builder /app/translations ./translations
 COPY --from=builder /app/Makefile ./Makefile
 
 # Copy and setup entrypoint script (before switching user)
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY build/docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Create scripts directory (for make commands that might need it)
 RUN mkdir -p ./scripts
 
 # Create directories
-RUN mkdir -p storages/logs && \
+RUN mkdir -p storages/log storages/app && \
     chown -R app:app /app
 
 # Switch to app user

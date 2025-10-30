@@ -41,48 +41,12 @@ func LoadRateLimitConfig() *RateLimitConfig {
 // getRouteRules returns route-specific rate limiting rules
 func getRouteRules() map[string]RateLimitRule {
 	rules := make(map[string]RateLimitRule)
-
-	// Auth routes - more restrictive
-	rules["/api/v1/auth/login"] = RateLimitRule{
-		Requests: utils.GetEnvInt("RATE_LIMIT_AUTH_LOGIN_REQUESTS", 5),
-		Duration: time.Duration(utils.GetEnvInt("RATE_LIMIT_AUTH_LOGIN_DURATION_MINUTES", 15)) * time.Minute,
-	}
-
-	rules["/api/v1/auth/register"] = RateLimitRule{
-		Requests: utils.GetEnvInt("RATE_LIMIT_AUTH_REGISTER_REQUESTS", 3),
-		Duration: time.Duration(utils.GetEnvInt("RATE_LIMIT_AUTH_REGISTER_DURATION_MINUTES", 60)) * time.Minute,
-	}
-
-	rules["/api/v1/auth/refresh"] = RateLimitRule{
-		Requests: utils.GetEnvInt("RATE_LIMIT_AUTH_REFRESH_REQUESTS", 10),
-		Duration: time.Duration(utils.GetEnvInt("RATE_LIMIT_AUTH_REFRESH_DURATION_MINUTES", 5)) * time.Minute,
-	}
-
-	// User routes
-	rules["/api/v1/users"] = RateLimitRule{
-		Requests: utils.GetEnvInt("RATE_LIMIT_USERS_REQUESTS", 50),
-		Duration: time.Duration(utils.GetEnvInt("RATE_LIMIT_USERS_DURATION_MINUTES", 1)) * time.Minute,
-	}
-
-	// Upload routes - more restrictive
-	rules["/api/v1/users/*/avatar"] = RateLimitRule{
-		Requests: utils.GetEnvInt("RATE_LIMIT_UPLOAD_REQUESTS", 10),
-		Duration: time.Duration(utils.GetEnvInt("RATE_LIMIT_UPLOAD_DURATION_MINUTES", 5)) * time.Minute,
-	}
-
 	return rules
 }
 
 // getIPRules returns IP-specific rate limiting rules
 func getIPRules() map[string]RateLimitRule {
 	rules := make(map[string]RateLimitRule)
-
-	// Global IP rate limit
-	rules["global"] = RateLimitRule{
-		Requests: utils.GetEnvInt("RATE_LIMIT_IP_GLOBAL_REQUESTS", 1000),
-		Duration: time.Duration(utils.GetEnvInt("RATE_LIMIT_IP_GLOBAL_DURATION_MINUTES", 60)) * time.Minute,
-	}
-
 	return rules
 }
 

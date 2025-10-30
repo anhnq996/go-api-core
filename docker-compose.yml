@@ -1,6 +1,28 @@
 version: "3.8"
 
 services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: apicore-api
+    env_file:
+      - .env.docker
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - monitoring
+    restart: unless-stopped
+    healthcheck:
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
   # Redis Cache
   redis:
     image: redis:7-alpine
