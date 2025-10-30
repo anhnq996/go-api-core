@@ -55,23 +55,43 @@ clean:
 # Database commands
 migrate:
 	@echo "Running migrations..."
-	@go run cmd/migrate/main.go up
+	@if [ -x ./migrate ]; then \
+		./migrate up; \
+	else \
+		go run cmd/migrate/main.go up; \
+	fi
 
 migrate-down:
 	@echo "Rolling back migrations..."
-	@go run cmd/migrate/main.go down
+	@if [ -x ./migrate ]; then \
+		./migrate down; \
+	else \
+		go run cmd/migrate/main.go down; \
+	fi
 
 seed:
 	@echo "Running seeders..."
-	@go run cmd/migrate/main.go seed
+	@if [ -x ./migrate ]; then \
+		./migrate seed || go run cmd/migrate/main.go seed; \
+	else \
+		go run cmd/migrate/main.go seed; \
+	fi
 
 migrate-fresh:
 	@echo "⚠️  Dropping all tables and re-running migrations..."
-	@go run cmd/migrate/main.go fresh
+	@if [ -x ./migrate ]; then \
+		./migrate fresh; \
+	else \
+		go run cmd/migrate/main.go fresh; \
+	fi
 	@echo "✅ Fresh migration complete"
 
 migrate-version:
-	@go run cmd/migrate/main.go version
+	@if [ -x ./migrate ]; then \
+		./migrate version; \
+	else \
+		go run cmd/migrate/main.go version; \
+	fi
 
 # Fresh setup (drop all, migrate, seed)
 fresh: migrate-fresh seed

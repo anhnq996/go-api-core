@@ -7,25 +7,10 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: apicore-api
+    env_file:
+      - .env.docker
     ports:
       - "3000:3000"
-    environment:
-      # Database
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_NAME: apicore
-      DB_SSLMODE: disable
-
-      # Redis
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      REDIS_DB: 0
-
-      # Server
-      SERVER_PORT: 3000
     depends_on:
       postgres:
         condition: service_healthy

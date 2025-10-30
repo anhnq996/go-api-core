@@ -2,9 +2,15 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/go-redis/redis/v8"
+)
+
+// Cache errors
+var (
+	ErrCacheMiss = errors.New("cache miss")
 )
 
 // Cache interface định nghĩa các operations

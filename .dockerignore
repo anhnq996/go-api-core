@@ -72,5 +72,4 @@ scripts/
 
 # Development files
 .air.toml
-Makefile
 

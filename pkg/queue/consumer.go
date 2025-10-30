@@ -138,11 +138,9 @@ func (c *ConsumerImpl) processMessage(message *Message) {
 		}
 
 		// Handle error
-		if c.handler.OnError != nil {
-			if handleErr := c.handler.OnError(ctx, message, err); handleErr != nil {
-				// If error handler fails, stop retrying
-				return
-			}
+		if handleErr := c.handler.OnError(ctx, message, err); handleErr != nil {
+			// If error handler fails, stop retrying
+			return
 		}
 
 		retryCount++
