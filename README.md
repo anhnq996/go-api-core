@@ -10,12 +10,13 @@ make setup            # Start services + migrate + seed
 make watch            # Run app with hot reload
 
 # Development
-make dev              # Start PostgreSQL + Redis
-make migrate          # Run migrations
-make seed             # Run seeders
-make run              # Start server (no reload)
-make watch            # Start server with hot reload (auto restart)
-make test             # Run tests
+make dev                                # Start PostgreSQL + Redis
+make migrate-create name=migration_name # Create new migration file. Example: make migrate-create name=add_products_table
+make migrate                            # Run migrations
+make seed                               # Run seeders
+make run                                # Start server (no reload)
+make watch                              # Start server with hot reload (auto restart)
+make test                               # Run tests
 
 # Production
 make docker-build     # Build Docker image
@@ -105,51 +106,57 @@ ApiCore/
 
 1. **Clone repository**
 
-    ```bash
-    git clone <repository-url>
-    cd ApiCore
-    ```
+   ```bash
+   git clone <repository-url>
+   cd ApiCore
+   ```
 
 2. **Install dependencies**
-    ```bash
-    go mod download
-    ```
+
+   ```bash
+   go mod download
+   ```
 
 3. **(Optional, if not available) Install Wire CLI**
-    ```bash
-    go install github.com/google/wire/cmd/wire@latest
-    ```
+
+   ```bash
+   go install github.com/google/wire/cmd/wire@latest
+   ```
 
 4. **Prepare environment config**
-    ```bash
-    cp env.example .env
-    # Edit .env for your database/Redis as needed
-    ```
+
+   ```bash
+   cp env.example .env
+   # Edit .env for your database/Redis as needed
+   ```
 
 5. **Generate RSA keys for JWT (one time only)**
-    ```bash
-    make gen-keys
-    # Output: keys/private.pem & keys/public.pem
-    ```
+
+   ```bash
+   make gen-keys
+   # Output: keys/private.pem & keys/public.pem
+   ```
 
 6. **Start infrastructure (PostgreSQL + Redis)**
-    ```bash
-    make dev
-    # Wait a few seconds for services to be ready
-    ```
+
+   ```bash
+   make dev
+   # Wait a few seconds for services to be ready
+   ```
 
 7. **Run migrations and seed database**
-    ```bash
-    make migrate
-    make seed
-    ```
+
+   ```bash
+   make migrate
+   make seed
+   ```
 
 8. **Run the application**
-    ```bash
-    make run
-    # or for hot reload (recommended during dev):
-    make watch
-    ```
+   ```bash
+   make run
+   # or for hot reload (recommended during dev):
+   make watch
+   ```
 
 **Note:** All important commands are defined in the Makefile for easy usage during both development and production.
 

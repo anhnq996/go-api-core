@@ -3,11 +3,14 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
+	"mime/multipart"
 	"time"
 
 	model "api-core/internal/models"
 	repository "api-core/internal/repositories"
 	"api-core/pkg/jwt"
+	"api-core/pkg/storage"
 	"api-core/pkg/utils"
 
 	"github.com/google/uuid"
@@ -21,9 +24,10 @@ var (
 
 // Service xử lý business logic cho auth
 type Service struct {
-	userRepo   repository.UserRepository
-	jwtManager *jwt.Manager
-	blacklist  *jwt.Blacklist
+	userRepo       repository.UserRepository
+	jwtManager     *jwt.Manager
+	blacklist      *jwt.Blacklist
+	storageManager *storage.StorageManager
 }
 
 // NewService tạo auth service mới
@@ -31,11 +35,13 @@ func NewService(
 	userRepo repository.UserRepository,
 	jwtManager *jwt.Manager,
 	blacklist *jwt.Blacklist,
+	storageManager *storage.StorageManager,
 ) *Service {
 	return &Service{
-		userRepo:   userRepo,
-		jwtManager: jwtManager,
-		blacklist:  blacklist,
+		userRepo:       userRepo,
+		jwtManager:     jwtManager,
+		blacklist:      blacklist,
+		storageManager: storageManager,
 	}
 }
 
@@ -245,7 +251,7 @@ func (s *Service) GetUserInfo(ctx context.Context, userID uuid.UUID) (*UserRespo
 }
 
 // Register đăng ký user mới
-func (s *Service) Register(ctx context.Context, name, email, password string, roleID *uuid.UUID) (*model.User, error) {
+func (s *Service) Register(ctx context.Context, name, email, password string, roleID *uuid.UUID, avatarFile *multipart.FileHeader) (*model.User, error) {
 	// Check email exists
 	_, err := s.userRepo.GetUserByEmail(ctx, email)
 	if err == nil {
@@ -267,8 +273,25 @@ func (s *Service) Register(ctx context.Context, name, email, password string, ro
 		IsActive: true,
 	}
 
+	// Upload avatar nếu có
+	if avatarFile != nil {
+		uploadOptions := storage.GetImageUploadOptions(300, 300, 90) // 300x300, quality 90
+		uploadOptions.Path = "avatars"                               // Store in avatars folder
+
+		result, err := s.storageManager.UploadFile(ctx, avatarFile, uploadOptions)
+		if err != nil {
+			return nil, fmt.Errorf("failed to upload avatar: %w", err)
+		}
+
+		user.Avatar = &result.Path
+	}
+
 	err = s.userRepo.Create(ctx, user)
 	if err != nil {
+		// Nếu tạo user thất bại, xóa avatar đã upload
+		if user.Avatar != nil {
+			s.storageManager.DeleteFile(ctx, *user.Avatar)
+		}
 		return nil, err
 	}
 

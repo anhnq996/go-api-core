@@ -24,10 +24,13 @@ func InitializeApp(db *gorm.DB, cacheClient cache.Cache) (*routes.Controllers, e
 		// Storage
 		ProvideStorageManager,
 
+		// FCM (optional)
+		ProvideFCMClient,
+
 		// Repositories (cần DB)
 		repository.NewUserRepository,
 
-		// Services (cần Repo + Cache + Storage)
+		// Services (cần Repo + Cache + Storage + FCM)
 		user.NewService,
 		auth.NewService,
 

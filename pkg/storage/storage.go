@@ -321,7 +321,7 @@ func (sm *StorageManager) processImage(content []byte, options *ImageOptions) ([
 // generateFilename tạo filename unique
 func (sm *StorageManager) generateFilename(originalFilename string) string {
 	ext := filepath.Ext(originalFilename)
-	name := strings.TrimSuffix(originalFilename, ext)
+	name := strings.TrimSuffix(strings.ReplaceAll(originalFilename, " ", "-"), ext)
 
 	// Generate unique name
 	uniqueID := uuid.New().String()

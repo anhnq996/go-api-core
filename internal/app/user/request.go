@@ -6,6 +6,7 @@ type CreateUserRequest struct {
 	Email    string  `json:"email" validate:"required,email"`
 	Password string  `json:"password" validate:"omitempty,strongpassword"`
 	RoleID   *string `json:"role_id" validate:"omitempty,uuid"`
+	FCMToken *string `json:"fcm_token" validate:"omitempty"` // Optional: FCM token để gửi notification chào mừng
 }
 
 // UpdateUserRequest request cho update user

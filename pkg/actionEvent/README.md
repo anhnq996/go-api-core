@@ -11,18 +11,6 @@ Package `pkg/actionEvent` cung cấp chức năng ghi action events vào Loki v�
 - ✅ **Performance tốt**: Timeout ngắn (2s) cho async operations
 - ✅ **Silent fail**: Không block main operations nếu Loki down
 
-## Cấu hình
-
-Thêm vào `.env`:
-
-```env
-# Action Events
-ACTION_EVENT_LOKI_URL=http://localhost:3100
-ACTION_EVENT_ENVIRONMENT=development
-ACTION_EVENT_ENABLED=true
-ACTION_EVENT_DEFAULT_JOB=action_events
-```
-
 ## Sử dụng
 
 ### 1. Tự động trong Repository

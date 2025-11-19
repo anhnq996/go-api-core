@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FCM Test - ApiCore</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      h1 {
+        color: #333;
+        margin-top: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      h2 {
+        color: #555;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 10px;
+        margin-top: 30px;
+      }
+
+      .status-card {
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 8px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .status-success {
+        background-color: #d4edda;
+        color: #155724;
+        border-left: 4px solid #28a745;
+      }
+
+      .status-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-left: 4px solid #dc3545;
+      }
+
+      .status-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border-left: 4px solid #ffc107;
+      }
+
+      .status-info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border-left: 4px solid #17a2b8;
+      }
+
+      .input-group {
+        margin: 20px 0;
+      }
+
+      .input-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #555;
+      }
+
+      .input-group input,
+      .input-group textarea,
+      .input-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+
+      .input-group input:focus,
+      .input-group textarea:focus,
+      .input-group select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .input-group textarea {
+        min-height: 100px;
+        resize: vertical;
+        font-family: monospace;
+      }
+
+      .token-display {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border: 2px solid #e0e0e0;
+        word-break: break-all;
+        font-family: monospace;
+        font-size: 12px;
+        position: relative;
+        margin: 10px 0;
+      }
+
+      .token-display::before {
+        content: "FCM Token:";
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #667eea;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin: 5px;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      button:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+      }
+
+      .btn-success {
+        background: #28a745;
+      }
+
+      .btn-danger {
+        background: #dc3545;
+      }
+
+      .btn-copy {
+        background: #17a2b8;
+        padding: 8px 16px;
+        font-size: 12px;
+        margin-top: 10px;
+      }
+
+      .notifications-log {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px;
+        background: #f8f9fa;
+        margin: 20px 0;
+      }
+
+      .notification-item {
+        background: white;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .notification-item .time {
+        color: #999;
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+
+      .notification-item .title {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 5px;
+      }
+
+      .notification-item .body {
+        color: #666;
+        margin-bottom: 5px;
+      }
+
+      .notification-item .data {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+        margin-top: 10px;
+        word-break: break-all;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+      }
+
+      .card {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        border: 2px solid #e0e0e0;
+      }
+
+      .card h3 {
+        margin-top: 0;
+        color: #667eea;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        margin: 2px;
+      }
+
+      .badge-success {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .badge-error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .badge-info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+
+      .firebase-config {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border: 2px dashed #ccc;
+        margin: 15px 0;
+      }
+
+      .firebase-config code {
+        font-family: monospace;
+        font-size: 12px;
+        color: #333;
+      }
+
+      .instructions {
+        background: #e7f3ff;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #2196f3;
+        margin: 20px 0;
+      }
+
+      .instructions ol {
+        margin: 10px 0;
+        padding-left: 20px;
+      }
+
+      .instructions li {
+        margin: 8px 0;
+      }
+
+      .clear-btn {
+        float: right;
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 10px;
+        }
+
+        .container {
+          padding: 20px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔥 FCM Test - ApiCore</h1>
+
+      <!-- Firebase Configuration -->
+      <div class="firebase-config">
+        <strong>📋 Firebase Config:</strong>
+        <div class="input-group">
+          <label for="firebaseConfig">Firebase Web App Config (JSON):</label>
+          <textarea
+            id="firebaseConfig"
+            placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'
+          >
+{
+  "apiKey": "AIzaSyASJbpleMfK4LC6hGIhcJC0ng1GtkFi4yY",
+  "authDomain": "api--core.firebaseapp.com",
+  "projectId": "api--core",
+  "storageBucket": "api--core.firebasestorage.app",
+  "messagingSenderId": "295353376871",
+  "appId": "1:295353376871:web:7f837bad391e4278bc34c2",
+  "measurementId": "G-4MT0VSYBFW"
+}</textarea
+          >
+          <small style="color: #666">
+            Lấy từ Firebase Console > Project Settings > General > Your apps >
+            Web app config
+          </small>
+        </div>
+        <button onclick="initializeFirebase()">Khởi Tạo Firebase</button>
+      </div>
+
+      <!-- Status -->
+      <div id="status" class="status-card status-info">
+        <span>⏳ Chưa khởi tạo Firebase</span>
+      </div>
+
+      <!-- Firebase Token Section -->
+      <h2>🔑 Firebase Token</h2>
+      <div class="card">
+        <div class="input-group">
+          <button onclick="requestPermission()" id="requestBtn" disabled>
+            Yêu Cầu Quyền Notification
+          </button>
+          <button onclick="getToken()" id="getTokenBtn" disabled>
+            Lấy FCM Token
+          </button>
+          <button onclick="deleteToken()" id="deleteTokenBtn" disabled>
+            Xóa Token
+          </button>
+        </div>
+
+        <div id="tokenContainer" style="display: none">
+          <div class="token-display" id="tokenDisplay"></div>
+          <button class="btn-copy" onclick="copyToken()">📋 Copy Token</button>
+          <div style="margin-top: 15px">
+            <strong>Token Info:</strong>
+            <div id="tokenInfo"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Notification Section -->
+      <h2>🧪 Test Notification</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Gửi Từ Backend</h3>
+          <div class="input-group">
+            <label for="backendUrl">Backend URL:</label>
+            <input
+              type="text"
+              id="backendUrl"
+              value="http://localhost:3000"
+              placeholder="http://localhost:3000"
+            />
+          </div>
+          <div class="input-group">
+            <label for="testToken">
+              FCM Token:
+              <small style="font-weight: normal; color: #666">
+                (Để trống để dùng token từ browser)
+              </small>
+            </label>
+            <div style="display: flex; gap: 5px">
+              <input
+                type="text"
+                id="testToken"
+                placeholder="Nhập FCM token hoặc để trống để dùng token hiện tại"
+                style="flex: 1"
+              />
+              <button
+                type="button"
+                onclick="copyCurrentTokenToTest()"
+                class="btn-copy"
+                style="margin: 0"
+                id="copyTokenBtn"
+                disabled
+              >
+                📋 Dùng Token Hiện Tại
+              </button>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="testTitle">Tiêu Đề:</label>
+            <input
+              type="text"
+              id="testTitle"
+              value="Test Notification"
+              placeholder="Tiêu đề notification"
+            />
+          </div>
+          <div class="input-group">
+            <label for="testBody">Nội Dung:</label>
+            <textarea id="testBody" placeholder="Nội dung notification">
+Đây là notification test từ FCM!</textarea
+            >
+          </div>
+          <div class="input-group">
+            <label for="testData">
+              Data (Key-Value Pairs):
+              <small
+                style="
+                  font-weight: normal;
+                  color: #666;
+                  display: block;
+                  margin-top: 5px;
+                "
+              >
+                Mỗi dòng một cặp <code>key=value</code>. Dòng bắt đầu bằng
+                <code>#</code> là comment.<br />
+                <strong>Ví dụ:</strong><br />
+                <code
+                  style="
+                    background: #f0f0f0;
+                    padding: 2px 4px;
+                    border-radius: 3px;
+                  "
+                >
+                  action=open_app<br />
+                  screen=home<br />
+                  user_id=12345<br />
+                  deep_link=https://example.com/product?id=123
+                </code>
+              </small>
+            </label>
+            <textarea
+              id="testData"
+              placeholder="action=open_app&#10;screen=home&#10;user_id=12345"
+              style="min-height: 100px; font-family: monospace; font-size: 12px"
+            ></textarea>
+          </div>
+          <button onclick="sendTestNotification()" id="sendTestBtn" disabled>
+            Gửi Test Notification
+          </button>
+          <div id="sendResult" style="margin-top: 10px"></div>
+        </div>
+
+        <div class="card">
+          <h3>Subscribe Topic</h3>
+          <div class="input-group">
+            <label for="topicName">Topic Name:</label>
+            <input
+              type="text"
+              id="topicName"
+              value="test_topic"
+              placeholder="test_topic"
+            />
+          </div>
+          <button onclick="subscribeToTopic()" id="subscribeBtn" disabled>
+            Subscribe Topic
+          </button>
+          <button onclick="unsubscribeFromTopic()" id="unsubscribeBtn" disabled>
+            Unsubscribe Topic
+          </button>
+          <div id="topicResult" style="margin-top: 10px"></div>
+        </div>
+      </div>
+
+      <!-- Notifications Log -->
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <h2>📬 Notifications Received</h2>
+        <button class="btn-secondary clear-btn" onclick="clearNotifications()">
+          Xóa Tất Cả
+        </button>
+      </div>
+      <div class="notifications-log" id="notificationsLog">
+        <div style="text-align: center; color: #999; padding: 20px">
+          Chưa có notification nào...
+        </div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="instructions">
+        <h3>📖 Hướng Dẫn Sử Dụng</h3>
+        <ol>
+          <li>
+            <strong>Lấy Firebase Config:</strong> Truy cập Firebase Console >
+            Project Settings > General > Your apps > Web app > Config
+          </li>
+          <li>
+            <strong>Paste config vào ô trên</strong> và click "Khởi Tạo
+            Firebase"
+          </li>
+          <li><strong>Yêu cầu quyền notification</strong> từ browser</li>
+          <li>
+            <strong>Lấy FCM token</strong> và copy token để dùng cho backend
+          </li>
+          <li>
+            <strong>Test notification:</strong> Sử dụng token để gửi
+            notification từ backend hoặc subscribe vào topic
+          </li>
+        </ol>
+        <p>
+          <strong>Lưu ý:</strong> Để nhận notification khi tab đang mở, cần cấu
+          hình Service Worker. Xem file <code>firebase-messaging-sw.js</code>
+        </p>
+      </div>
+    </div>
+
+    <script>
+      let messaging = null;
+      let currentToken = null;
+      let notificationCount = 0;
+
+      // Update status
+      function updateStatus(message, type = "info") {
+        const statusDiv = document.getElementById("status");
+        statusDiv.className = `status-card status-${type}`;
+        statusDiv.innerHTML = `<span>${message}</span>`;
+      }
+
+      // Initialize Firebase
+      function initializeFirebase() {
+        const configText = document
+          .getElementById("firebaseConfig")
+          .value.trim();
+        if (!configText) {
+          alert("Vui lòng nhập Firebase config!");
+          return;
+        }
+
+        try {
+          const firebaseConfig = JSON.parse(configText);
+
+          // Initialize Firebase
+          if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+          }
+
+          // Initialize Firebase Cloud Messaging
+          messaging = firebase.messaging();
+
+          // Enable buttons
+          document.getElementById("requestBtn").disabled = false;
+
+          // Request permission on initialization
+          requestPermission();
+
+          updateStatus("✅ Firebase đã được khởi tạo thành công!", "success");
+        } catch (error) {
+          updateStatus(`❌ Lỗi khởi tạo Firebase: ${error.message}`, "error");
+          console.error("Firebase initialization error:", error);
+        }
+      }
+
+      // Request notification permission
+      async function requestPermission() {
+        if (!messaging) {
+          alert("Vui lòng khởi tạo Firebase trước!");
+          return;
+        }
+
+        try {
+          const permission = await Notification.requestPermission();
+          if (permission === "granted") {
+            updateStatus("✅ Quyền notification đã được cấp!", "success");
+            document.getElementById("getTokenBtn").disabled = false;
+            document.getElementById("subscribeBtn").disabled = false;
+            document.getElementById("unsubscribeBtn").disabled = false;
+            // Auto get token
+            getToken();
+          } else {
+            updateStatus("❌ Quyền notification bị từ chối!", "error");
+          }
+        } catch (error) {
+          updateStatus(`❌ Lỗi khi yêu cầu quyền: ${error.message}`, "error");
+          console.error("Permission error:", error);
+        }
+      }
+
+      // Get FCM token
+      async function getToken() {
+        if (!messaging) {
+          alert("Vui lòng khởi tạo Firebase trước!");
+          return;
+        }
+
+        try {
+          currentToken = await messaging.getToken({
+            vapidKey: getVapidKey(), // Optional: if you have VAPID key
+          });
+
+          if (currentToken) {
+            document.getElementById("tokenDisplay").textContent = currentToken;
+            document.getElementById("tokenContainer").style.display = "block";
+            document.getElementById("sendTestBtn").disabled = false;
+
+            // Show token info
+            const tokenInfo = document.getElementById("tokenInfo");
+            tokenInfo.innerHTML = `
+              <div class="badge badge-success">Token hợp lệ</div>
+              <div style="margin-top: 10px;">
+                <strong>Độ dài:</strong> ${currentToken.length} ký tự<br>
+                <strong>Lấy lúc:</strong> ${new Date().toLocaleString("vi-VN")}
+              </div>
+            `;
+
+            updateStatus("✅ Đã lấy FCM token thành công!", "success");
+
+            // Enable copy token button
+            document.getElementById("copyTokenBtn").disabled = false;
+
+            // Setup message listener
+            setupMessageListener();
+          } else {
+            updateStatus(
+              "⚠️ Không thể lấy token. Kiểm tra quyền notification.",
+              "warning"
+            );
+          }
+        } catch (error) {
+          updateStatus(`❌ Lỗi khi lấy token: ${error.message}`, "error");
+          console.error("Token error:", error);
+        }
+      }
+
+      // Delete token
+      async function deleteToken() {
+        if (!messaging || !currentToken) {
+          alert("Không có token để xóa!");
+          return;
+        }
+
+        try {
+          await messaging.deleteToken();
+          currentToken = null;
+          document.getElementById("tokenContainer").style.display = "none";
+          document.getElementById("sendTestBtn").disabled = true;
+          updateStatus("✅ Đã xóa token thành công!", "success");
+        } catch (error) {
+          updateStatus(`❌ Lỗi khi xóa token: ${error.message}`, "error");
+          console.error("Delete token error:", error);
+        }
+      }
+
+      // Copy token to clipboard
+      function copyToken() {
+        if (!currentToken) {
+          alert("Không có token để copy!");
+          return;
+        }
+
+        navigator.clipboard.writeText(currentToken).then(
+          () => {
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = "✅ Đã copy!";
+            setTimeout(() => {
+              btn.textContent = originalText;
+            }, 2000);
+          },
+          (err) => {
+            alert("Lỗi khi copy: " + err);
+          }
+        );
+      }
+
+      // Setup message listener
+      function setupMessageListener() {
+        if (!messaging) return;
+
+        // Handle foreground messages
+        messaging.onMessage((payload) => {
+          console.log("Message received:", payload);
+          addNotification(payload);
+          showBrowserNotification(payload);
+        });
+      }
+
+      // Add notification to log
+      function addNotification(payload) {
+        notificationCount++;
+        const log = document.getElementById("notificationsLog");
+
+        // Clear placeholder
+        if (notificationCount === 1) {
+          log.innerHTML = "";
+        }
+
+        const notificationDiv = document.createElement("div");
+        notificationDiv.className = "notification-item";
+
+        const time = new Date().toLocaleString("vi-VN");
+        const title = payload.notification?.title || "No title";
+        const body = payload.notification?.body || "No body";
+        const data = payload.data || {};
+
+        notificationDiv.innerHTML = `
+          <div class="time">${time}</div>
+          <div class="title">${title}</div>
+          <div class="body">${body}</div>
+          ${
+            Object.keys(data).length > 0
+              ? `<div class="data">Data: ${JSON.stringify(data, null, 2)}</div>`
+              : ""
+          }
+          ${
+            payload.data
+              ? `<div class="data">Raw Data: ${JSON.stringify(
+                  payload.data,
+                  null,
+                  2
+                )}</div>`
+              : ""
+          }
+        `;
+
+        log.appendChild(notificationDiv);
+        log.scrollTop = log.scrollHeight;
+      }
+
+      // Show browser notification
+      function showBrowserNotification(payload) {
+        if (Notification.permission === "granted") {
+          const notification = new Notification(
+            payload.notification?.title || "New Notification",
+            {
+              body: payload.notification?.body || "You have a new notification",
+              icon: payload.notification?.icon || "/favicon.ico",
+              badge: "/favicon.ico",
+              tag: payload.data?.tag || "fcm-notification",
+              data: payload.data,
+            }
+          );
+
+          notification.onclick = () => {
+            window.focus();
+            notification.close();
+          };
+        }
+      }
+
+      // Parse key-value pairs from textarea
+      // Format: key=value (mỗi dòng một cặp)
+      // Hỗ trợ value có chứa dấu = bằng cách chỉ split ở dấu = đầu tiên
+      function parseKeyValuePairs(text) {
+        const data = {};
+        if (!text || !text.trim()) {
+          return data;
+        }
+
+        const lines = text.split("\n");
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+
+          // Skip empty lines and comments (lines starting with #)
+          if (!line || line.startsWith("#")) {
+            continue;
+          }
+
+          // Find first = sign
+          const separatorIndex = line.indexOf("=");
+          if (separatorIndex === -1 || separatorIndex === 0) {
+            // Invalid format (no = or = at start), skip this line
+            console.warn(`Skipping invalid line ${i + 1}: ${line}`);
+            continue;
+          }
+
+          const key = line.substring(0, separatorIndex).trim();
+          const value = line.substring(separatorIndex + 1).trim();
+
+          if (key) {
+            data[key] = value || ""; // Allow empty values
+          } else {
+            console.warn(`Skipping line ${i + 1} with empty key: ${line}`);
+          }
+        }
+
+        return data;
+      }
+
+      // Copy current token to test token input
+      function copyCurrentTokenToTest() {
+        if (!currentToken) {
+          alert("Chưa có token! Vui lòng lấy token trước.");
+          return;
+        }
+        document.getElementById("testToken").value = currentToken;
+      }
+
+      // Send test notification from backend
+      async function sendTestNotification() {
+        const backendUrl = document.getElementById("backendUrl").value;
+        const title = document.getElementById("testTitle").value;
+        const body = document.getElementById("testBody").value;
+        const dataText = document.getElementById("testData").value;
+        const testToken = document.getElementById("testToken").value.trim();
+
+        if (!backendUrl || !title || !body) {
+          alert(
+            "Vui lòng điền đầy đủ thông tin (Backend URL, Tiêu đề, Nội dung)!"
+          );
+          return;
+        }
+
+        // Get token: use input token if provided, otherwise use current token
+        let token = testToken || currentToken;
+        if (!token) {
+          alert("Vui lòng nhập FCM token hoặc lấy token từ browser trước!");
+          return;
+        }
+
+        // Parse key-value pairs from textarea
+        const data = parseKeyValuePairs(dataText);
+
+        // Always add type and timestamp to data
+        data.timestamp = new Date().toISOString();
+
+        const resultDiv = document.getElementById("sendResult");
+        resultDiv.innerHTML =
+          '<span class="badge badge-info">Đang gửi...</span>';
+
+        try {
+          const response = await fetch(`${backendUrl}/test/fcm/test`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              token: token,
+              title: title,
+              body: body,
+              data: data,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            resultDiv.innerHTML = `
+              <span class="badge badge-success">✅ Gửi thành công!</span>
+              <div style="margin-top: 5px; font-size: 12px;">
+                Message ID: ${result.message_id || result.id || "N/A"}
+              </div>
+            `;
+          } else {
+            resultDiv.innerHTML = `
+              <span class="badge badge-error">❌ Lỗi: ${
+                result.message || result.error || "Unknown error"
+              }</span>
+            `;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `
+            <span class="badge badge-error">❌ Lỗi kết nối: ${error.message}</span>
+            <div style="margin-top: 5px; font-size: 12px; color: #666;">
+              Lưu ý: Bạn cần tạo API endpoint /test/fcm/test trong backend
+            </div>
+          `;
+          console.error("Send notification error:", error);
+        }
+      }
+
+      // Subscribe to topic
+      async function subscribeToTopic() {
+        if (!currentToken) {
+          alert("Vui lòng lấy token trước!");
+          return;
+        }
+
+        const topic = document.getElementById("topicName").value.trim();
+        if (!topic) {
+          alert("Vui lòng nhập tên topic!");
+          return;
+        }
+
+        const resultDiv = document.getElementById("topicResult");
+        resultDiv.innerHTML =
+          '<span class="badge badge-info">Đang subscribe...</span>';
+
+        try {
+          // Note: Cần có backend endpoint để subscribe topic
+          const backendUrl = document.getElementById("backendUrl").value;
+          const response = await fetch(`${backendUrl}/test/fcm/subscribe`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              tokens: [currentToken],
+              topic: topic,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            resultDiv.innerHTML = `
+              <span class="badge badge-success">✅ Đã subscribe topic: ${topic}</span>
+            `;
+          } else {
+            resultDiv.innerHTML = `
+              <span class="badge badge-error">❌ Lỗi: ${
+                result.message || result.error
+              }</span>
+            `;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `
+            <span class="badge badge-error">❌ Lỗi: ${error.message}</span>
+          `;
+          console.error("Subscribe error:", error);
+        }
+      }
+
+      // Unsubscribe from topic
+      async function unsubscribeFromTopic() {
+        if (!currentToken) {
+          alert("Vui lòng lấy token trước!");
+          return;
+        }
+
+        const topic = document.getElementById("topicName").value.trim();
+        if (!topic) {
+          alert("Vui lòng nhập tên topic!");
+          return;
+        }
+
+        const resultDiv = document.getElementById("topicResult");
+        resultDiv.innerHTML =
+          '<span class="badge badge-info">Đang unsubscribe...</span>';
+
+        try {
+          const backendUrl = document.getElementById("backendUrl").value;
+          const response = await fetch(`${backendUrl}/test/fcm/unsubscribe`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              tokens: [currentToken],
+              topic: topic,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            resultDiv.innerHTML = `
+              <span class="badge badge-success">✅ Đã unsubscribe topic: ${topic}</span>
+            `;
+          } else {
+            resultDiv.innerHTML = `
+              <span class="badge badge-error">❌ Lỗi: ${
+                result.message || result.error
+              }</span>
+            `;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `
+            <span class="badge badge-error">❌ Lỗi: ${error.message}</span>
+          `;
+          console.error("Unsubscribe error:", error);
+        }
+      }
+
+      // Clear notifications
+      function clearNotifications() {
+        notificationCount = 0;
+        document.getElementById("notificationsLog").innerHTML = `
+          <div style="text-align: center; color: #999; padding: 20px;">
+            Chưa có notification nào...
+          </div>
+        `;
+      }
+
+      // Get VAPID key (optional, for custom VAPID)
+      function getVapidKey() {
+        // Bạn có thể lấy VAPID key từ Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
+        // Hoặc để null nếu không dùng custom VAPID
+        return null;
+      }
+
+      // Check if service worker is supported
+      if ("serviceWorker" in navigator) {
+        // Service worker sẽ được tự động register bởi Firebase SDK
+        console.log("Service Worker supported");
+      } else {
+        updateStatus(
+          "⚠️ Service Worker không được hỗ trợ trên browser này",
+          "warning"
+        );
+      }
+
+      // Auto-initialize Firebase on page load if config is present
+      window.addEventListener("DOMContentLoaded", () => {
+        const configText = document
+          .getElementById("firebaseConfig")
+          .value.trim();
+        if (configText) {
+          // Auto-initialize after a short delay to ensure DOM is ready
+          setTimeout(() => {
+            console.log("Auto-initializing Firebase with default config...");
+            initializeFirebase();
+          }, 500);
+        }
+      });
+
+      // Check notification permission on load
+      if (Notification.permission === "granted") {
+        updateStatus("✅ Quyền notification đã được cấp trước đó", "success");
+      } else if (Notification.permission === "denied") {
+        updateStatus("❌ Quyền notification bị từ chối", "error");
+      }
+    </script>
+  </body>
+</html>
