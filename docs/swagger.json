@@ -1,8 +1,8 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "ApiCore - User Management & Authentication API",
-    "description": "API documentation cho hệ thống quản lý người dùng và xác thực",
+    "title": "ApiCore - Chat Backend API",
+    "description": "API documentation cho hệ thống quản lý người dùng, xác thực, kết bạn và chat",
     "version": "1.0.0",
     "contact": {
       "name": "API Support",
@@ -759,6 +759,565 @@
           }
         }
       }
+    },
+    "/api/v1/friends": {
+      "get": {
+        "summary": "Lấy danh sách bạn bè",
+        "description": "Trả về danh sách tất cả bạn bè của user hiện tại",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Danh sách bạn bè",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FriendsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ hoặc đã hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/friends/requests": {
+      "post": {
+        "summary": "Gửi lời mời kết bạn",
+        "description": "Gửi lời mời kết bạn đến một user khác",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendFriendRequestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Lời mời kết bạn được gửi thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FriendRequestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc đã là bạn bè",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ hoặc đã hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/friends/requests/accept": {
+      "post": {
+        "summary": "Chấp nhận lời mời kết bạn",
+        "description": "Chấp nhận một lời mời kết bạn đã nhận được",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptFriendRequestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Đã chấp nhận lời mời kết bạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ hoặc đã hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/friends/requests/reject": {
+      "post": {
+        "summary": "Từ chối lời mời kết bạn",
+        "description": "Từ chối một lời mời kết bạn đã nhận được",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectFriendRequestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Đã từ chối lời mời kết bạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ hoặc đã hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/friends/requests/cancel": {
+      "post": {
+        "summary": "Hủy lời mời kết bạn",
+        "description": "Hủy một lời mời kết bạn đã gửi",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelFriendRequestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Đã hủy lời mời kết bạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ hoặc đã hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/friends/requests/pending": {
+      "get": {
+        "summary": "Lấy danh sách lời mời đang chờ",
+        "description": "Trả về danh sách các lời mời kết bạn đang chờ được chấp nhận",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Danh sách lời mời đang chờ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FriendRequestsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ hoặc đã hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/friends/requests/sent": {
+      "get": {
+        "summary": "Lấy danh sách lời mời đã gửi",
+        "description": "Trả về danh sách các lời mời kết bạn đã gửi",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Danh sách lời mời đã gửi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FriendRequestsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ hoặc đã hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chats/conversations": {
+      "get": {
+        "summary": "Lấy danh sách conversations",
+        "description": "Trả về danh sách tất cả conversations của user hiện tại",
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Danh sách conversations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ hoặc đã hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Lấy hoặc tạo direct conversation",
+        "description": "Lấy conversation trực tiếp giữa 2 user, nếu chưa có thì tạo mới",
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetOrCreateConversationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conversation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc không phải bạn bè",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ hoặc đã hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chats/conversations/{id}/messages": {
+      "get": {
+        "summary": "Lấy danh sách tin nhắn",
+        "description": "Trả về danh sách tin nhắn của conversation với pagination",
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID của conversation",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Số trang (bắt đầu từ 1)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Số items per page (1-100)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Danh sách tin nhắn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessagesListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Không tham gia conversation này",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ hoặc đã hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chats/messages": {
+      "post": {
+        "summary": "Gửi tin nhắn",
+        "description": "Gửi tin nhắn trong một conversation",
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tin nhắn được gửi thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dữ liệu không hợp lệ hoặc không tham gia conversation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token không hợp lệ hoặc đã hết hạn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1145,6 +1704,451 @@
               }
             },
             "description": "Chi tiết lỗi validation theo field"
+          }
+        }
+      },
+      "SendFriendRequestRequest": {
+        "type": "object",
+        "required": [
+          "receiver_id"
+        ],
+        "properties": {
+          "receiver_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID của user nhận lời mời"
+          }
+        }
+      },
+      "AcceptFriendRequestRequest": {
+        "type": "object",
+        "required": [
+          "request_id"
+        ],
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID của lời mời kết bạn"
+          }
+        }
+      },
+      "RejectFriendRequestRequest": {
+        "type": "object",
+        "required": [
+          "request_id"
+        ],
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID của lời mời kết bạn"
+          }
+        }
+      },
+      "CancelFriendRequestRequest": {
+        "type": "object",
+        "required": [
+          "request_id"
+        ],
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID của lời mời kết bạn"
+          }
+        }
+      },
+      "FriendRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID của lời mời"
+          },
+          "sender_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID của người gửi"
+          },
+          "receiver_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID của người nhận"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "accepted",
+              "rejected",
+              "cancelled"
+            ],
+            "description": "Trạng thái lời mời"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/User"
+          },
+          "receiver": {
+            "$ref": "#/components/schemas/User"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Thời gian tạo"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Thời gian cập nhật"
+          }
+        }
+      },
+      "FriendRequestResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/FriendRequest"
+          }
+        }
+      },
+      "FriendsListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          }
+        }
+      },
+      "FriendRequestsListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FriendRequest"
+            }
+          }
+        }
+      },
+      "GetOrCreateConversationRequest": {
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID của user muốn chat"
+          }
+        }
+      },
+      "Conversation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID của conversation"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "direct",
+              "group"
+            ],
+            "description": "Loại conversation"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Tên conversation (cho group)"
+          },
+          "avatar": {
+            "type": "string",
+            "nullable": true,
+            "description": "Avatar conversation"
+          },
+          "created_by": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "ID người tạo"
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversationParticipant"
+            },
+            "description": "Danh sách người tham gia"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Thời gian tạo"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Thời gian cập nhật"
+          }
+        }
+      },
+      "ConversationParticipant": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "last_read_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "joined_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ConversationResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Conversation"
+          }
+        }
+      },
+      "ConversationsListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Conversation"
+            }
+          }
+        }
+      },
+      "SendMessageRequest": {
+        "type": "object",
+        "required": [
+          "conversation_id",
+          "content"
+        ],
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID của conversation"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000,
+            "description": "Nội dung tin nhắn"
+          },
+          "message_type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "image",
+              "file",
+              "audio",
+              "video",
+              "location",
+              "system"
+            ],
+            "default": "text",
+            "description": "Loại tin nhắn"
+          },
+          "reply_to_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "ID tin nhắn được trả lời"
+          }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID của tin nhắn"
+          },
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID của conversation"
+          },
+          "sender_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID của người gửi"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/User"
+          },
+          "content": {
+            "type": "string",
+            "description": "Nội dung tin nhắn"
+          },
+          "message_type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "image",
+              "file",
+              "audio",
+              "video",
+              "location",
+              "system"
+            ],
+            "description": "Loại tin nhắn"
+          },
+          "reply_to_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "ID tin nhắn được trả lời"
+          },
+          "reply_to": {
+            "$ref": "#/components/schemas/Message",
+            "nullable": true
+          },
+          "file_url": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL file (nếu có)"
+          },
+          "file_name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Tên file"
+          },
+          "file_size": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Kích thước file (bytes)"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Thời gian gửi"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Thời gian cập nhật"
+          }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Message"
+          }
+        }
+      },
+      "MessagesListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/Pagination"
+              }
+            }
           }
         }
       }

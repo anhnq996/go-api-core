@@ -5,6 +5,8 @@ package wire
 
 import (
 	"api-core/internal/app/auth"
+	"api-core/internal/app/chat"
+	"api-core/internal/app/friend"
 	"api-core/internal/app/user"
 	repository "api-core/internal/repositories"
 	"api-core/internal/routes"
@@ -29,14 +31,23 @@ func InitializeApp(db *gorm.DB, cacheClient cache.Cache) (*routes.Controllers, e
 
 		// Repositories (cần DB)
 		repository.NewUserRepository,
+		repository.NewFriendRequestRepository,
+		repository.NewFriendshipRepository,
+		repository.NewConversationRepository,
+		repository.NewConversationParticipantRepository,
+		repository.NewMessageRepository,
 
 		// Services (cần Repo + Cache + Storage + FCM)
 		user.NewService,
 		auth.NewService,
+		friend.NewService,
+		chat.NewService,
 
 		// Handlers
 		user.NewHandler,
 		auth.NewHandler,
+		friend.NewHandler,
+		chat.NewHandler,
 
 		// Controllers
 		routes.NewControllers,

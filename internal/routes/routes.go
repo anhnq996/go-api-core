@@ -2,6 +2,8 @@ package routes
 
 import (
 	"api-core/internal/app/auth"
+	"api-core/internal/app/chat"
+	"api-core/internal/app/friend"
 	"api-core/internal/app/user"
 	"api-core/pkg/jwt"
 	middlewarePkg "api-core/pkg/middleware"
@@ -12,11 +14,13 @@ import (
 
 // Controllers chứa tất cả các handler của các module
 type Controllers struct {
-	UserHandler  *user.Handler
-	AuthHandler  *auth.Handler
-	JWTManager   *jwt.Manager
-	JWTBlacklist *jwt.Blacklist
-	Cache        CacheInterface
+	UserHandler   *user.Handler
+	AuthHandler   *auth.Handler
+	FriendHandler *friend.Handler
+	ChatHandler   *chat.Handler
+	JWTManager    *jwt.Manager
+	JWTBlacklist  *jwt.Blacklist
+	Cache         CacheInterface
 }
 
 // CacheInterface defines cache interface for rate limiting
@@ -28,16 +32,20 @@ type CacheInterface interface {
 func NewControllers(
 	userHandler *user.Handler,
 	authHandler *auth.Handler,
+	friendHandler *friend.Handler,
+	chatHandler *chat.Handler,
 	jwtManager *jwt.Manager,
 	jwtBlacklist *jwt.Blacklist,
 	cache CacheInterface,
 ) *Controllers {
 	return &Controllers{
-		UserHandler:  userHandler,
-		AuthHandler:  authHandler,
-		JWTManager:   jwtManager,
-		JWTBlacklist: jwtBlacklist,
-		Cache:        cache,
+		UserHandler:   userHandler,
+		AuthHandler:   authHandler,
+		FriendHandler: friendHandler,
+		ChatHandler:   chatHandler,
+		JWTManager:    jwtManager,
+		JWTBlacklist:  jwtBlacklist,
+		Cache:         cache,
 	}
 }
 
@@ -60,6 +68,24 @@ func RegisterRoutes(r chi.Router, c *Controllers) {
 			// Rate limiting cho user routes: 100 requests per minute by user or IP
 			r.Use(middlewarePkg.RateLimitByUserOrIP(c.Cache.GetRedisClient(), 150, 60))
 			user.RegisterRoutes(r, c.UserHandler)
+		})
+
+		// Friend routes - /api/v1/friends/* (Protected with rate limiting)
+		r.Group(func(r chi.Router) {
+			// Apply JWT middleware for friend routes
+			r.Use(c.JWTManager.MiddlewareWithBlacklist(c.JWTBlacklist))
+			// Rate limiting cho friend routes
+			r.Use(middlewarePkg.RateLimitByUserOrIP(c.Cache.GetRedisClient(), 150, 60))
+			friend.RegisterRoutes(r, c.FriendHandler)
+		})
+
+		// Chat routes - /api/v1/chats/* (Protected with rate limiting)
+		r.Group(func(r chi.Router) {
+			// Apply JWT middleware for chat routes
+			r.Use(c.JWTManager.MiddlewareWithBlacklist(c.JWTBlacklist))
+			// Rate limiting cho chat routes
+			r.Use(middlewarePkg.RateLimitByUserOrIP(c.Cache.GetRedisClient(), 200, 60))
+			chat.RegisterRoutes(r, c.ChatHandler)
 		})
 
 		// Thêm các module khác ở đây

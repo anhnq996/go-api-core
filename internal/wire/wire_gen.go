@@ -8,6 +8,8 @@ package wire
 
 import (
 	"api-core/internal/app/auth"
+	"api-core/internal/app/chat"
+	"api-core/internal/app/friend"
 	"api-core/internal/app/user"
 	"api-core/internal/repositories"
 	"api-core/internal/routes"
@@ -34,8 +36,17 @@ func InitializeApp(db *gorm.DB, cacheClient cache.Cache) (*routes.Controllers, e
 	blacklist := ProvideJWTBlacklist(cacheClient)
 	authService := auth.NewService(userRepository, manager, blacklist, storageManager)
 	authHandler := auth.NewHandler(authService)
+	friendRequestRepository := repository.NewFriendRequestRepository(db)
+	friendshipRepository := repository.NewFriendshipRepository(db)
+	friendService := friend.NewService(friendRequestRepository, friendshipRepository, userRepository, db)
+	friendHandler := friend.NewHandler(friendService)
+	conversationRepository := repository.NewConversationRepository(db)
+	conversationParticipantRepository := repository.NewConversationParticipantRepository(db)
+	messageRepository := repository.NewMessageRepository(db)
+	chatService := chat.NewService(conversationRepository, conversationParticipantRepository, messageRepository, friendshipRepository, userRepository, db)
+	chatHandler := chat.NewHandler(chatService)
 	cacheInterface := ProvideCacheInterface(cacheClient)
-	controllers := routes.NewControllers(handler, authHandler, manager, blacklist, cacheInterface)
+	controllers := routes.NewControllers(handler, authHandler, friendHandler, chatHandler, manager, blacklist, cacheInterface)
 	return controllers, nil
 }
 
