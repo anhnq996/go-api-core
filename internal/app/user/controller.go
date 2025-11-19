@@ -96,7 +96,14 @@ func (h *Handler) Store(w http.ResponseWriter, r *http.Request) {
 		Email: input.Email,
 	}
 
-	created, err := h.service.Create(r.Context(), u, avatarFile)
+	// Get FCM token từ request nếu có
+	var fcmToken string
+	if input.FCMToken != nil && *input.FCMToken != "" {
+		fcmToken = *input.FCMToken
+	}
+
+	// Gọi service với FCM token (nếu có)
+	created, err := h.service.Create(r.Context(), u, avatarFile, fcmToken)
 	if err != nil {
 		response.InternalServerError(w, lang, response.CodeInternalServerError)
 		return

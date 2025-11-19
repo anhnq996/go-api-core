@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"mime/multipart"
 	"net/http"
 
 	"api-core/pkg/i18n"
@@ -168,13 +169,20 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 
 	var input RegisterRequest
 
-	// Validate request
+	// Validate request (will parse multipart form if needed)
 	if !validator.ValidateAndRespond(w, r, &input) {
 		return
 	}
 
+	// Get avatar file if exists
+	var avatarFile *multipart.FileHeader
+	if file, fileHeader, err := r.FormFile("avatar"); err == nil {
+		file.Close() // Close the file handle
+		avatarFile = fileHeader
+	}
+
 	// Register
-	user, err := h.service.Register(r.Context(), input.Name, input.Email, input.Password, nil)
+	user, err := h.service.Register(r.Context(), input.Name, input.Email, input.Password, nil, avatarFile)
 	if err != nil {
 		if err.Error() == "email already exists" {
 			response.Conflict(w, lang, response.CodeEmailAlreadyExists)

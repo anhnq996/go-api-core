@@ -6,8 +6,10 @@ import (
 
 	"api-core/config"
 	"api-core/pkg/cache"
+	"api-core/pkg/fcm"
 	"api-core/pkg/jwt"
 	"api-core/pkg/storage"
+	"api-core/pkg/utils"
 )
 
 // ProvideJWTManager provides JWT manager
@@ -35,6 +37,31 @@ func ProvideJWTBlacklist(cacheClient cache.Cache) *jwt.Blacklist {
 func ProvideStorageManager() (*storage.StorageManager, error) {
 	cfg := config.GetDefaultStorageConfig()
 	return storage.NewStorageManager(cfg)
+}
+
+// ProvideFCMClient provides FCM client (optional, returns nil if not configured)
+func ProvideFCMClient() (*fcm.Client, error) {
+	credentialsFile := utils.GetEnv("FIREBASE_CREDENTIALS_FILE", "keys/firebase-credentials.json")
+	timeoutSeconds := utils.GetEnvInt("FCM_TIMEOUT", 10)
+
+	// Check if credentials file exists
+	if _, err := os.Stat(credentialsFile); os.IsNotExist(err) {
+		// FCM is optional, return nil without error
+		return nil, nil
+	}
+
+	config := &fcm.Config{
+		CredentialsFile: credentialsFile,
+		Timeout:         time.Duration(timeoutSeconds) * time.Second,
+	}
+
+	client, err := fcm.NewClient(config)
+	if err != nil {
+		// Return nil with error, but don't fail app initialization
+		return nil, err
+	}
+
+	return client, nil
 }
 
 func getEnv(key, defaultValue string) string {
