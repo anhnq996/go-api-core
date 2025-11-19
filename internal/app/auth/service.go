@@ -3,13 +3,14 @@ package auth
 import (
 	"context"
 	"errors"
-	"fmt"
 	"mime/multipart"
 	"time"
 
 	model "api-core/internal/models"
 	repository "api-core/internal/repositories"
+	"api-core/pkg/i18n"
 	"api-core/pkg/jwt"
+	"api-core/pkg/response"
 	"api-core/pkg/storage"
 	"api-core/pkg/utils"
 
@@ -72,27 +73,29 @@ type RoleResponse struct {
 }
 
 // Login xử lý login
-func (s *Service) Login(ctx context.Context, email, password string) (*LoginResponse, error) {
+func (s *Service) Login(ctx context.Context, email, password string) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
+
 	// Get user by email
 	user, err := s.userRepo.GetUserByEmail(ctx, email)
 	if err != nil {
-		return nil, ErrInvalidCredentials
+		return response.UnauthorizedResponse(lang, response.CodeInvalidCredentials)
 	}
 
 	// Check if user is active
 	if !user.IsActive {
-		return nil, ErrUserInactive
+		return response.ForbiddenResponse(lang, response.CodeAccountDisabled)
 	}
 
 	// Verify password
 	if !utils.CheckPassword(password, user.Password) {
-		return nil, ErrInvalidCredentials
+		return response.UnauthorizedResponse(lang, response.CodeInvalidCredentials)
 	}
 
 	// Get user with role and permissions
 	userWithRole, err := s.userRepo.GetUserWithRole(ctx, user.ID)
 	if err != nil {
-		return nil, err
+		return response.InternalServerErrorResponse(lang, response.CodeInternalServerError)
 	}
 
 	// Get permissions
@@ -114,14 +117,14 @@ func (s *Service) Login(ctx context.Context, email, password string) (*LoginResp
 		},
 	)
 	if err != nil {
-		return nil, err
+		return response.InternalServerErrorResponse(lang, response.CodeInternalServerError)
 	}
 
 	// Update last login
 	s.userRepo.UpdateLastLogin(ctx, user.ID)
 
 	// Build response
-	response := &LoginResponse{
+	loginResp := &LoginResponse{
 		User: &UserResponse{
 			ID:          user.ID,
 			Name:        user.Name,
@@ -136,31 +139,39 @@ func (s *Service) Login(ctx context.Context, email, password string) (*LoginResp
 		TokenType:    tokenPair.TokenType,
 	}
 
-	return response, nil
+	return response.SuccessResponse(lang, response.CodeLoginSuccess, loginResp)
 }
 
 // RefreshToken làm mới access token
-func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*LoginResponse, error) {
+func (s *Service) RefreshToken(ctx context.Context, refreshToken string) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
+
 	// Verify refresh token
 	userIDStr, err := s.jwtManager.VerifyRefreshToken(refreshToken)
 	if err != nil {
-		return nil, err
+		if err == jwt.ErrExpiredToken {
+			return response.UnauthorizedResponse(lang, response.CodeTokenExpired)
+		}
+		if err == jwt.ErrInvalidToken {
+			return response.UnauthorizedResponse(lang, response.CodeTokenInvalid)
+		}
+		return response.UnauthorizedResponse(lang, response.CodeTokenInvalid)
 	}
 
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return nil, ErrInvalidCredentials
+		return response.UnauthorizedResponse(lang, response.CodeInvalidCredentials)
 	}
 
 	// Get user with role
 	user, err := s.userRepo.GetUserWithRole(ctx, userID)
 	if err != nil {
-		return nil, ErrUserNotFound
+		return response.NotFoundResponse(lang, response.CodeUserNotFound)
 	}
 
 	// Check if user is active
 	if !user.IsActive {
-		return nil, ErrUserInactive
+		return response.ForbiddenResponse(lang, response.CodeAccountDisabled)
 	}
 
 	// Get permissions
@@ -182,11 +193,11 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*Login
 		},
 	)
 	if err != nil {
-		return nil, err
+		return response.InternalServerErrorResponse(lang, response.CodeInternalServerError)
 	}
 
 	// Build response
-	response := &LoginResponse{
+	loginResp := &LoginResponse{
 		User: &UserResponse{
 			ID:          user.ID,
 			Name:        user.Name,
@@ -201,34 +212,48 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*Login
 		TokenType:    tokenPair.TokenType,
 	}
 
-	return response, nil
+	return response.SuccessResponse(lang, response.CodeTokenRefreshed, loginResp)
 }
 
 // Logout đăng xuất (blacklist token)
-func (s *Service) Logout(ctx context.Context, token string) error {
+func (s *Service) Logout(ctx context.Context, token string) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
+
 	// Get token expiry
 	expiry, err := s.jwtManager.GetTokenExpiry(token)
 	if err != nil {
-		return err
+		return response.UnauthorizedResponse(lang, response.CodeTokenInvalid)
 	}
 
 	// Add to blacklist
-	return s.blacklist.Add(token, expiry)
+	if err := s.blacklist.Add(token, expiry); err != nil {
+		return response.InternalServerErrorResponse(lang, response.CodeInternalServerError)
+	}
+
+	return response.SuccessResponse(lang, response.CodeLogoutSuccess, nil)
 }
 
 // LogoutAll đăng xuất tất cả devices
-func (s *Service) LogoutAll(ctx context.Context, userID uuid.UUID) error {
+func (s *Service) LogoutAll(ctx context.Context, userID uuid.UUID) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
+
 	// Blacklist all user tokens (7 days - max refresh token duration)
 	expiry := utils.Now().Add(7 * 24 * time.Hour)
-	return s.blacklist.AddUserTokens(userID.String(), expiry)
+	if err := s.blacklist.AddUserTokens(userID.String(), expiry); err != nil {
+		return response.InternalServerErrorResponse(lang, response.CodeInternalServerError)
+	}
+
+	return response.SuccessResponse(lang, response.CodeLogoutSuccess, nil)
 }
 
 // GetUserInfo lấy thông tin user hiện tại
-func (s *Service) GetUserInfo(ctx context.Context, userID uuid.UUID) (*UserResponse, error) {
+func (s *Service) GetUserInfo(ctx context.Context, userID uuid.UUID) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
+
 	// Get user with role
 	user, err := s.userRepo.GetUserWithRole(ctx, userID)
 	if err != nil {
-		return nil, ErrUserNotFound
+		return response.NotFoundResponse(lang, response.CodeUserNotFound)
 	}
 
 	// Get permissions
@@ -240,28 +265,32 @@ func (s *Service) GetUserInfo(ctx context.Context, userID uuid.UUID) (*UserRespo
 		}
 	}
 
-	return &UserResponse{
+	userResp := &UserResponse{
 		ID:          user.ID,
 		Name:        user.Name,
 		Email:       user.Email,
 		Avatar:      user.Avatar,
 		Role:        buildRoleResponse(user.Role),
 		Permissions: permissions,
-	}, nil
+	}
+
+	return response.SuccessResponse(lang, response.CodeSuccess, userResp)
 }
 
 // Register đăng ký user mới
-func (s *Service) Register(ctx context.Context, name, email, password string, roleID *uuid.UUID, avatarFile *multipart.FileHeader) (*model.User, error) {
+func (s *Service) Register(ctx context.Context, name, email, password string, roleID *uuid.UUID, avatarFile *multipart.FileHeader) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
+
 	// Check email exists
 	_, err := s.userRepo.GetUserByEmail(ctx, email)
 	if err == nil {
-		return nil, errors.New("email already exists")
+		return response.ConflictResponse(lang, response.CodeEmailAlreadyExists)
 	}
 
 	// Hash password
 	hashedPassword, err := utils.HashPassword(password)
 	if err != nil {
-		return nil, err
+		return response.InternalServerErrorResponse(lang, response.CodeInternalServerError)
 	}
 
 	// Create user
@@ -280,7 +309,7 @@ func (s *Service) Register(ctx context.Context, name, email, password string, ro
 
 		result, err := s.storageManager.UploadFile(ctx, avatarFile, uploadOptions)
 		if err != nil {
-			return nil, fmt.Errorf("failed to upload avatar: %w", err)
+			return response.InternalServerErrorResponse(lang, response.CodeFileUploadFailed)
 		}
 
 		user.Avatar = &result.Path
@@ -292,10 +321,10 @@ func (s *Service) Register(ctx context.Context, name, email, password string, ro
 		if user.Avatar != nil {
 			s.storageManager.DeleteFile(ctx, *user.Avatar)
 		}
-		return nil, err
+		return response.InternalServerErrorResponse(lang, response.CodeInternalServerError)
 	}
 
-	return user, nil
+	return response.SuccessResponse(lang, response.CodeCreated, user)
 }
 
 // Helper functions

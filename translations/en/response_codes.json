@@ -42,5 +42,17 @@
   "LOGIN_SUCCESS": "Login successful",
   "LOGOUT_SUCCESS": "Logout successful",
   "TOKEN_REFRESHED": "Token refreshed successfully",
-  "RATE_LIMIT_EXCEEDED": "Rate limit exceeded"
+  "RATE_LIMIT_EXCEEDED": "Rate limit exceeded",
+  "CANNOT_CHAT_WITH_SELF": "Cannot chat with yourself",
+  "NOT_FRIEND": "Can only chat with friends",
+  "CONVERSATION_NOT_FOUND": "Conversation not found",
+  "NOT_PARTICIPANT": "You are not a participant in this conversation",
+  "MESSAGE_NOT_FOUND": "Reply message not found",
+  "REPLY_MESSAGE_NOT_IN_CONVERSATION": "Reply message does not belong to this conversation",
+  "SEND_MESSAGE_FAILED": "Failed to send message",
+  "GET_MESSAGES_FAILED": "Failed to get messages",
+  "GET_CONVERSATIONS_FAILED": "Failed to get conversations",
+  "CREATE_CONVERSATION_FAILED": "Failed to create conversation",
+  "GET_CONVERSATION_FAILED": "Failed to get conversation",
+  "CHECK_FRIENDSHIP_FAILED": "Failed to check friendship"
 }

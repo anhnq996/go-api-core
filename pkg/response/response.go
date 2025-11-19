@@ -38,6 +38,16 @@ func JSON(w http.ResponseWriter, statusCode int, response Response) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// SuccessResponse tạo success response struct (dùng trong service)
+func SuccessResponse(lang, code string, data interface{}) *Response {
+	return &Response{
+		Success: true,
+		Code:    code,
+		Message: i18n.T(lang, "response_codes."+code),
+		Data:    data,
+	}
+}
+
 // Success gửi success response
 // statusCode optional: nếu không truyền sẽ dùng 200
 func Success(w http.ResponseWriter, lang, code string, data interface{}, statusCode ...int) {
@@ -46,16 +56,14 @@ func Success(w http.ResponseWriter, lang, code string, data interface{}, statusC
 		status = statusCode[0]
 	}
 
-	message := i18n.T(lang, "response_codes."+code)
+	JSON(w, status, *SuccessResponse(lang, code, data))
+}
 
-	response := Response{
-		Success: true,
-		Code:    code,
-		Message: message,
-		Data:    data,
-	}
-
-	JSON(w, status, response)
+// SuccessResponseWithMeta tạo success response với meta (dùng trong service)
+func SuccessResponseWithMeta(lang, code string, data interface{}, meta *Meta) *Response {
+	resp := SuccessResponse(lang, code, data)
+	resp.Meta = meta
+	return resp
 }
 
 // SuccessWithMeta gửi success response với metadata
@@ -66,17 +74,7 @@ func SuccessWithMeta(w http.ResponseWriter, lang, code string, data interface{},
 		status = statusCode[0]
 	}
 
-	message := i18n.T(lang, "response_codes."+code)
-
-	response := Response{
-		Success: true,
-		Code:    code,
-		Message: message,
-		Data:    data,
-		Meta:    meta,
-	}
-
-	JSON(w, status, response)
+	JSON(w, status, *SuccessResponseWithMeta(lang, code, data, meta))
 }
 
 // Created gửi response cho tạo mới thành công (201)
@@ -87,21 +85,22 @@ func Created(w http.ResponseWriter, lang, code string, data interface{}, statusC
 		status = statusCode[0]
 	}
 
-	message := i18n.T(lang, "response_codes."+code)
-
-	response := Response{
-		Success: true,
-		Code:    code,
-		Message: message,
-		Data:    data,
-	}
-
-	JSON(w, status, response)
+	JSON(w, status, *SuccessResponse(lang, code, data))
 }
 
 // NoContent gửi response không có nội dung (204)
 func NoContent(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// ErrorResponse tạo error response struct (dùng trong service)
+func ErrorResponse(lang, code string, errors interface{}) *Response {
+	return &Response{
+		Success: false,
+		Code:    code,
+		Message: i18n.T(lang, "response_codes."+code),
+		Errors:  errors,
+	}
 }
 
 // Error gửi error response
@@ -112,16 +111,12 @@ func Error(w http.ResponseWriter, lang, code string, errors interface{}, statusC
 		status = statusCode[0]
 	}
 
-	message := i18n.T(lang, "response_codes."+code)
+	JSON(w, status, *ErrorResponse(lang, code, errors))
+}
 
-	response := Response{
-		Success: false,
-		Code:    code,
-		Message: message,
-		Errors:  errors,
-	}
-
-	JSON(w, status, response)
+// BadRequestResponse tạo bad request response (dùng trong service)
+func BadRequestResponse(lang, code string, errors interface{}) *Response {
+	return ErrorResponse(lang, code, errors)
 }
 
 // BadRequest gửi bad request error (400)
@@ -131,7 +126,12 @@ func BadRequest(w http.ResponseWriter, lang, code string, errors interface{}, st
 	if len(statusCode) > 0 {
 		status = statusCode[0]
 	}
-	Error(w, lang, code, errors, status)
+	JSON(w, status, *BadRequestResponse(lang, code, errors))
+}
+
+// UnauthorizedResponse tạo unauthorized response (dùng trong service)
+func UnauthorizedResponse(lang, code string) *Response {
+	return ErrorResponse(lang, code, nil)
 }
 
 // Unauthorized gửi unauthorized error (401)
@@ -141,7 +141,12 @@ func Unauthorized(w http.ResponseWriter, lang, code string, statusCode ...int) {
 	if len(statusCode) > 0 {
 		status = statusCode[0]
 	}
-	Error(w, lang, code, nil, status)
+	JSON(w, status, *UnauthorizedResponse(lang, code))
+}
+
+// ForbiddenResponse tạo forbidden response (dùng trong service)
+func ForbiddenResponse(lang, code string) *Response {
+	return ErrorResponse(lang, code, nil)
 }
 
 // Forbidden gửi forbidden error (403)
@@ -151,7 +156,12 @@ func Forbidden(w http.ResponseWriter, lang, code string, statusCode ...int) {
 	if len(statusCode) > 0 {
 		status = statusCode[0]
 	}
-	Error(w, lang, code, nil, status)
+	JSON(w, status, *ForbiddenResponse(lang, code))
+}
+
+// NotFoundResponse tạo not found response (dùng trong service)
+func NotFoundResponse(lang, code string) *Response {
+	return ErrorResponse(lang, code, nil)
 }
 
 // NotFound gửi not found error (404)
@@ -161,7 +171,12 @@ func NotFound(w http.ResponseWriter, lang, code string, statusCode ...int) {
 	if len(statusCode) > 0 {
 		status = statusCode[0]
 	}
-	Error(w, lang, code, nil, status)
+	JSON(w, status, *NotFoundResponse(lang, code))
+}
+
+// ConflictResponse tạo conflict response (dùng trong service)
+func ConflictResponse(lang, code string) *Response {
+	return ErrorResponse(lang, code, nil)
 }
 
 // Conflict gửi conflict error (409)
@@ -171,7 +186,12 @@ func Conflict(w http.ResponseWriter, lang, code string, statusCode ...int) {
 	if len(statusCode) > 0 {
 		status = statusCode[0]
 	}
-	Error(w, lang, code, nil, status)
+	JSON(w, status, *ConflictResponse(lang, code))
+}
+
+// ValidationErrorResponse tạo validation error response (dùng trong service)
+func ValidationErrorResponse(lang, code string, errors interface{}) *Response {
+	return ErrorResponse(lang, code, errors)
 }
 
 // ValidationError gửi validation error (422)
@@ -181,7 +201,12 @@ func ValidationError(w http.ResponseWriter, lang, code string, errors interface{
 	if len(statusCode) > 0 {
 		status = statusCode[0]
 	}
-	Error(w, lang, code, errors, status)
+	JSON(w, status, *ValidationErrorResponse(lang, code, errors))
+}
+
+// InternalServerErrorResponse tạo internal server error response (dùng trong service)
+func InternalServerErrorResponse(lang, code string) *Response {
+	return ErrorResponse(lang, code, nil)
 }
 
 // InternalServerError gửi internal server error (500)
@@ -191,7 +216,12 @@ func InternalServerError(w http.ResponseWriter, lang, code string, statusCode ..
 	if len(statusCode) > 0 {
 		status = statusCode[0]
 	}
-	Error(w, lang, code, nil, status)
+	JSON(w, status, *InternalServerErrorResponse(lang, code))
+}
+
+// ServiceUnavailableResponse tạo service unavailable response (dùng trong service)
+func ServiceUnavailableResponse(lang, code string) *Response {
+	return ErrorResponse(lang, code, nil)
 }
 
 // ServiceUnavailable gửi service unavailable error (503)
@@ -201,7 +231,7 @@ func ServiceUnavailable(w http.ResponseWriter, lang, code string, statusCode ...
 	if len(statusCode) > 0 {
 		status = statusCode[0]
 	}
-	Error(w, lang, code, nil, status)
+	JSON(w, status, *ServiceUnavailableResponse(lang, code))
 }
 
 // GetLanguageFromRequest lấy ngôn ngữ từ request

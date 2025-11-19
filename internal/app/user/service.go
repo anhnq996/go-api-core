@@ -5,7 +5,9 @@ import (
 	repository "api-core/internal/repositories"
 	"api-core/pkg/cache"
 	"api-core/pkg/fcm"
+	"api-core/pkg/i18n"
 	"api-core/pkg/logger"
+	"api-core/pkg/response"
 	"api-core/pkg/storage"
 	"api-core/pkg/utils"
 
@@ -72,26 +74,28 @@ func (s *Service) GetAll() ([]model.User, error) {
 }
 
 // GetByID lấy user theo ID
-func (s *Service) GetByID(id string) (*model.User, error) {
-	ctx := context.Background()
+func (s *Service) GetByID(ctx context.Context, id string) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
 	userID, err := uuid.Parse(id)
 	if err != nil {
-		return nil, err
+		return response.BadRequestResponse(lang, response.CodeInvalidInput, nil)
 	}
 
 	user, err := s.repo.FindByID(ctx, userID)
 	if err != nil {
-		return nil, err
+		return response.NotFoundResponse(lang, response.CodeUserNotFound)
 	}
 
 	// Convert avatar path to full URL
 	s.convertAvatarToFullURL(user)
 
-	return user, nil
+	return response.SuccessResponse(lang, response.CodeSuccess, user)
 }
 
 // Create tạo user mới (có thể nhận FCM token để gửi notification)
-func (s *Service) Create(ctx context.Context, user model.User, avatarFile *multipart.FileHeader, fcmToken ...string) (*model.User, error) {
+func (s *Service) Create(ctx context.Context, user model.User, avatarFile *multipart.FileHeader, fcmToken ...string) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
+
 	// Upload avatar nếu có
 	if avatarFile != nil {
 		uploadOptions := storage.GetImageUploadOptions(300, 300, 90) // 300x300, quality 90
@@ -99,7 +103,7 @@ func (s *Service) Create(ctx context.Context, user model.User, avatarFile *multi
 
 		result, err := s.storageManager.UploadFile(ctx, avatarFile, uploadOptions)
 		if err != nil {
-			return nil, fmt.Errorf("failed to upload avatar: %w", err)
+			return response.InternalServerErrorResponse(lang, response.CodeFileUploadFailed)
 		}
 
 		user.Avatar = &result.Path
@@ -110,7 +114,7 @@ func (s *Service) Create(ctx context.Context, user model.User, avatarFile *multi
 		if user.Avatar != nil {
 			s.storageManager.DeleteFile(ctx, *user.Avatar)
 		}
-		return nil, err
+		return response.InternalServerErrorResponse(lang, response.CodeInternalServerError)
 	}
 
 	// Invalidate cache
@@ -126,20 +130,21 @@ func (s *Service) Create(ctx context.Context, user model.User, avatarFile *multi
 	}
 	go s.sendWelcomeNotification(context.Background(), &user, token)
 
-	return &user, nil
+	return response.SuccessResponse(lang, response.CodeCreated, user)
 }
 
 // Update cập nhật user
-func (s *Service) Update(ctx context.Context, id string, user model.User, avatarFile *multipart.FileHeader) (*model.User, error) {
+func (s *Service) Update(ctx context.Context, id string, user model.User, avatarFile *multipart.FileHeader) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
 	userID, err := uuid.Parse(id)
 	if err != nil {
-		return nil, err
+		return response.BadRequestResponse(lang, response.CodeInvalidInput, nil)
 	}
 
 	// Get current user để lấy avatar cũ
 	currentUser, err := s.repo.FindByID(ctx, userID)
 	if err != nil {
-		return nil, err
+		return response.NotFoundResponse(lang, response.CodeUserNotFound)
 	}
 
 	// Upload avatar mới nếu có
@@ -149,7 +154,7 @@ func (s *Service) Update(ctx context.Context, id string, user model.User, avatar
 
 		result, err := s.storageManager.UploadFile(ctx, avatarFile, uploadOptions)
 		if err != nil {
-			return nil, fmt.Errorf("failed to upload avatar: %w", err)
+			return response.InternalServerErrorResponse(lang, response.CodeFileUploadFailed)
 		}
 
 		user.Avatar = &result.Path
@@ -160,7 +165,7 @@ func (s *Service) Update(ctx context.Context, id string, user model.User, avatar
 		if avatarFile != nil && user.Avatar != nil {
 			s.storageManager.DeleteFile(ctx, *user.Avatar)
 		}
-		return nil, err
+		return response.InternalServerErrorResponse(lang, response.CodeInternalServerError)
 	}
 
 	// Xóa avatar cũ nếu có avatar mới
@@ -174,7 +179,7 @@ func (s *Service) Update(ctx context.Context, id string, user model.User, avatar
 	// Get updated user
 	updated, err := s.repo.FindByID(ctx, userID)
 	if err != nil {
-		return nil, err
+		return response.InternalServerErrorResponse(lang, response.CodeInternalServerError)
 	}
 
 	// Invalidate cache
@@ -183,34 +188,35 @@ func (s *Service) Update(ctx context.Context, id string, user model.User, avatar
 	// Convert avatar path to full URL
 	s.convertAvatarToFullURL(updated)
 
-	return updated, nil
+	return response.SuccessResponse(lang, response.CodeUpdated, updated)
 }
 
 // Delete xóa user
-func (s *Service) Delete(ctx context.Context, id string) error {
+func (s *Service) Delete(ctx context.Context, id string) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
 	userID, err := uuid.Parse(id)
 	if err != nil {
-		return err
+		return response.BadRequestResponse(lang, response.CodeInvalidInput, nil)
 	}
 
 	if err := s.repo.Delete(ctx, userID); err != nil {
-		return err
+		return response.NotFoundResponse(lang, response.CodeUserNotFound)
 	}
 
 	// Invalidate cache
 	s.cache.Del(ctx, cacheKeyAll, fmt.Sprintf("user:%s", id))
 
-	return nil
+	return response.SuccessResponse(lang, response.CodeDeleted, nil)
 }
 
 // GetListWithPagination lấy danh sách users với pagination, sort và search
-func (s *Service) GetListWithPagination(page, perPage int, sort, order, search string) ([]model.User, *utils.Pagination, error) {
-	ctx := context.Background()
+func (s *Service) GetListWithPagination(ctx context.Context, page, perPage int, sort, order, search string) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
 
 	// Get users with pagination
 	users, total, err := s.repo.FindAllWithPaginationAndRole(ctx, page, perPage, sort, order, search)
 	if err != nil {
-		return nil, nil, err
+		return response.InternalServerErrorResponse(lang, response.CodeInternalServerError)
 	}
 
 	// Create pagination info
@@ -219,7 +225,16 @@ func (s *Service) GetListWithPagination(page, perPage int, sort, order, search s
 	// Convert avatar paths to full URLs
 	s.convertUsersAvatarToFullURL(users)
 
-	return users, pagination, nil
+	// Create response data
+	responseData := utils.PaginatedResponse(users, pagination)
+	meta := &response.Meta{
+		Page:       pagination.Page,
+		PerPage:    pagination.PerPage,
+		Total:      pagination.Total,
+		TotalPages: pagination.TotalPages,
+	}
+
+	return response.SuccessResponseWithMeta(lang, response.CodeSuccess, responseData, meta)
 }
 
 // convertAvatarToFullURL converts avatar path to full URL

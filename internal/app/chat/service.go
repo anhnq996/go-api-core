@@ -2,11 +2,12 @@ package chat
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	model "api-core/internal/models"
 	repository "api-core/internal/repositories"
+	"api-core/pkg/i18n"
+	"api-core/pkg/response"
 	"api-core/pkg/utils"
 
 	"github.com/google/uuid"
@@ -43,19 +44,21 @@ func NewService(
 }
 
 // GetOrCreateDirectConversation lấy hoặc tạo direct conversation giữa 2 user
-func (s *Service) GetOrCreateDirectConversation(ctx context.Context, user1ID, user2ID uuid.UUID) (*model.Conversation, error) {
+func (s *Service) GetOrCreateDirectConversation(ctx context.Context, user1ID, user2ID uuid.UUID) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
+
 	// Kiểm tra không thể chat với chính mình
 	if user1ID == user2ID {
-		return nil, fmt.Errorf("không thể chat với chính mình")
+		return response.BadRequestResponse(lang, response.CodeCannotChatWithSelf, nil)
 	}
 
 	// Kiểm tra 2 user có phải bạn bè không (nếu cần)
 	isFriend, err := s.friendshipRepo.IsFriend(ctx, user1ID, user2ID)
 	if err != nil {
-		return nil, fmt.Errorf("lỗi kiểm tra quan hệ bạn bè: %w", err)
+		return response.InternalServerErrorResponse(lang, response.CodeCheckFriendshipFailed)
 	}
 	if !isFriend {
-		return nil, fmt.Errorf("chỉ có thể chat với bạn bè")
+		return response.ForbiddenResponse(lang, response.CodeNotFriend)
 	}
 
 	// Tìm conversation đã tồn tại
@@ -64,17 +67,17 @@ func (s *Service) GetOrCreateDirectConversation(ctx context.Context, user1ID, us
 		// Preload participants
 		conversation, err = s.conversationRepo.FindByIDWithParticipants(ctx, conversation.ID)
 		if err != nil {
-			return nil, fmt.Errorf("lỗi lấy conversation: %w", err)
+			return response.InternalServerErrorResponse(lang, response.CodeGetConversationFailed)
 		}
-		return conversation, nil
+		return response.SuccessResponse(lang, response.CodeSuccess, conversation)
 	}
 
 	// Tạo conversation mới
-	return s.createDirectConversation(ctx, user1ID, user2ID)
+	return s.createDirectConversation(ctx, user1ID, user2ID, lang)
 }
 
 // createDirectConversation tạo direct conversation mới
-func (s *Service) createDirectConversation(ctx context.Context, user1ID, user2ID uuid.UUID) (*model.Conversation, error) {
+func (s *Service) createDirectConversation(ctx context.Context, user1ID, user2ID uuid.UUID, lang string) *response.Response {
 	var conversation *model.Conversation
 
 	err := s.db.Transaction(func(tx *gorm.DB) error {
@@ -83,7 +86,7 @@ func (s *Service) createDirectConversation(ctx context.Context, user1ID, user2ID
 			Type: model.ConversationTypeDirect,
 		}
 		if err := tx.WithContext(ctx).Create(&conv).Error; err != nil {
-			return fmt.Errorf("lỗi tạo conversation: %w", err)
+			return err
 		}
 
 		// Tạo participants
@@ -100,7 +103,7 @@ func (s *Service) createDirectConversation(ctx context.Context, user1ID, user2ID
 
 		for _, p := range participants {
 			if err := tx.WithContext(ctx).Create(&p).Error; err != nil {
-				return fmt.Errorf("lỗi tạo participant: %w", err)
+				return err
 			}
 		}
 
@@ -109,24 +112,26 @@ func (s *Service) createDirectConversation(ctx context.Context, user1ID, user2ID
 	})
 
 	if err != nil {
-		return nil, err
+		return response.InternalServerErrorResponse(lang, response.CodeCreateConversationFailed)
 	}
 
 	// Preload participants
 	conversation, err = s.conversationRepo.FindByIDWithParticipants(ctx, conversation.ID)
 	if err != nil {
-		return nil, fmt.Errorf("lỗi lấy conversation: %w", err)
+		return response.InternalServerErrorResponse(lang, response.CodeGetConversationFailed)
 	}
 
-	return conversation, nil
+	return response.SuccessResponse(lang, response.CodeSuccess, conversation)
 }
 
 // SendMessage gửi tin nhắn
-func (s *Service) SendMessage(ctx context.Context, conversationID, senderID uuid.UUID, content string, messageType model.MessageType, replyToID *uuid.UUID) (*model.Message, error) {
+func (s *Service) SendMessage(ctx context.Context, conversationID, senderID uuid.UUID, content string, messageType model.MessageType, replyToID *uuid.UUID) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
+
 	// Kiểm tra conversation có tồn tại không
 	conversation, err := s.conversationRepo.FindByIDWithParticipants(ctx, conversationID)
 	if err != nil {
-		return nil, fmt.Errorf("conversation không tồn tại")
+		return response.NotFoundResponse(lang, response.CodeConversationNotFound)
 	}
 
 	// Kiểm tra sender có tham gia conversation không
@@ -138,17 +143,17 @@ func (s *Service) SendMessage(ctx context.Context, conversationID, senderID uuid
 		}
 	}
 	if !isParticipant {
-		return nil, fmt.Errorf("bạn không tham gia conversation này")
+		return response.ForbiddenResponse(lang, response.CodeNotParticipant)
 	}
 
 	// Kiểm tra reply_to message có tồn tại không
 	if replyToID != nil {
 		replyTo, err := s.messageRepo.FindByID(ctx, *replyToID)
 		if err != nil {
-			return nil, fmt.Errorf("tin nhắn được trả lời không tồn tại")
+			return response.NotFoundResponse(lang, response.CodeMessageNotFound)
 		}
 		if replyTo.ConversationID != conversationID {
-			return nil, fmt.Errorf("tin nhắn được trả lời không thuộc conversation này")
+			return response.BadRequestResponse(lang, response.CodeReplyMessageNotInConversation, nil)
 		}
 	}
 
@@ -162,7 +167,7 @@ func (s *Service) SendMessage(ctx context.Context, conversationID, senderID uuid
 	}
 
 	if err := s.messageRepo.Create(ctx, &message); err != nil {
-		return nil, fmt.Errorf("lỗi gửi tin nhắn: %w", err)
+		return response.InternalServerErrorResponse(lang, response.CodeSendMessageFailed)
 	}
 
 	// Preload relations
@@ -177,21 +182,23 @@ func (s *Service) SendMessage(ctx context.Context, conversationID, senderID uuid
 		Where("id = ?", conversationID).
 		Update("updated_at", now)
 
-	return &message, nil
+	return response.SuccessResponse(lang, response.CodeCreated, message)
 }
 
 // GetMessages lấy danh sách tin nhắn của conversation
-func (s *Service) GetMessages(ctx context.Context, conversationID, userID uuid.UUID, page, perPage int) ([]model.Message, *utils.Pagination, error) {
+func (s *Service) GetMessages(ctx context.Context, conversationID, userID uuid.UUID, page, perPage int) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
+
 	// Kiểm tra user có tham gia conversation không
 	_, err := s.conversationParticipantRepo.FindByConversationAndUser(ctx, conversationID, userID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("bạn không tham gia conversation này")
+		return response.ForbiddenResponse(lang, response.CodeNotParticipant)
 	}
 
 	// Lấy messages
 	messages, total, err := s.messageRepo.FindByConversationID(ctx, conversationID, page, perPage)
 	if err != nil {
-		return nil, nil, fmt.Errorf("lỗi lấy tin nhắn: %w", err)
+		return response.InternalServerErrorResponse(lang, response.CodeGetMessagesFailed)
 	}
 
 	// Preload sender và reply_to
@@ -204,6 +211,12 @@ func (s *Service) GetMessages(ctx context.Context, conversationID, userID uuid.U
 
 	// Tạo pagination
 	pagination := utils.NewPagination(page, perPage, total)
+	meta := &response.Meta{
+		Page:       pagination.Page,
+		PerPage:    pagination.PerPage,
+		Total:      pagination.Total,
+		TotalPages: pagination.TotalPages,
+	}
 
 	// Cập nhật last_read_at
 	go func() {
@@ -212,15 +225,18 @@ func (s *Service) GetMessages(ctx context.Context, conversationID, userID uuid.U
 		s.conversationParticipantRepo.UpdateLastReadAt(ctx, conversationID, userID)
 	}()
 
-	return messages, pagination, nil
+	responseData := utils.PaginatedResponse(messages, pagination)
+	return response.SuccessResponseWithMeta(lang, response.CodeSuccess, responseData, meta)
 }
 
 // GetConversations lấy danh sách conversations của user
-func (s *Service) GetConversations(ctx context.Context, userID uuid.UUID) ([]model.Conversation, error) {
+func (s *Service) GetConversations(ctx context.Context, userID uuid.UUID) *response.Response {
+	lang := i18n.GetLanguageFromContext(ctx)
+
 	conversations, err := s.conversationRepo.FindByUserID(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("lỗi lấy danh sách conversations: %w", err)
+		return response.InternalServerErrorResponse(lang, response.CodeGetConversationsFailed)
 	}
 
-	return conversations, nil
+	return response.SuccessResponse(lang, response.CodeSuccess, conversations)
 }

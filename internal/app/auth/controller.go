@@ -24,8 +24,6 @@ func NewHandler(service *Service) *Handler {
 
 // Login - POST /auth/login
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
-	lang := i18n.GetLanguageFromContext(r.Context())
-
 	var input LoginRequest
 
 	// Validate request - tự động parse JSON và validate
@@ -33,28 +31,13 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return // Validation failed, response đã được gửi
 	}
 
-	// Login
-	result, err := h.service.Login(r.Context(), input.Email, input.Password)
-	if err != nil {
-		if err == ErrInvalidCredentials {
-			response.Unauthorized(w, lang, response.CodeInvalidCredentials)
-			return
-		}
-		if err == ErrUserInactive {
-			response.Forbidden(w, lang, response.CodeAccountDisabled)
-			return
-		}
-		response.InternalServerError(w, lang, response.CodeInternalServerError)
-		return
-	}
-
-	response.Success(w, lang, response.CodeLoginSuccess, result)
+	resp := h.service.Login(r.Context(), input.Email, input.Password)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // RefreshToken - POST /auth/refresh
 func (h *Handler) RefreshToken(w http.ResponseWriter, r *http.Request) {
-	lang := i18n.GetLanguageFromContext(r.Context())
-
 	var input RefreshTokenRequest
 
 	// Validate request
@@ -62,30 +45,9 @@ func (h *Handler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Refresh token
-	result, err := h.service.RefreshToken(r.Context(), input.RefreshToken)
-	if err != nil {
-		if err == jwt.ErrExpiredToken {
-			response.Unauthorized(w, lang, response.CodeTokenExpired)
-			return
-		}
-		if err == jwt.ErrInvalidToken {
-			response.Unauthorized(w, lang, response.CodeTokenInvalid)
-			return
-		}
-		if err == ErrUserNotFound {
-			response.NotFound(w, lang, response.CodeUserNotFound)
-			return
-		}
-		if err == ErrUserInactive {
-			response.Forbidden(w, lang, response.CodeAccountDisabled)
-			return
-		}
-		response.InternalServerError(w, lang, response.CodeInternalServerError)
-		return
-	}
-
-	response.Success(w, lang, response.CodeTokenRefreshed, result)
+	resp := h.service.RefreshToken(r.Context(), input.RefreshToken)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // Logout - POST /auth/logout
@@ -99,13 +61,9 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Logout
-	if err := h.service.Logout(r.Context(), token); err != nil {
-		response.InternalServerError(w, lang, response.CodeInternalServerError)
-		return
-	}
-
-	response.Success(w, lang, response.CodeLogoutSuccess, nil)
+	resp := h.service.Logout(r.Context(), token)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // LogoutAll - POST /auth/logout-all
@@ -124,13 +82,9 @@ func (h *Handler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Logout all
-	if err := h.service.LogoutAll(r.Context(), id); err != nil {
-		response.InternalServerError(w, lang, response.CodeInternalServerError)
-		return
-	}
-
-	response.Success(w, lang, response.CodeLogoutSuccess, nil)
+	resp := h.service.LogoutAll(r.Context(), id)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // GetMe - GET /auth/me
@@ -149,24 +103,13 @@ func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get user info
-	user, err := h.service.GetUserInfo(r.Context(), id)
-	if err != nil {
-		if err == ErrUserNotFound {
-			response.NotFound(w, lang, response.CodeUserNotFound)
-			return
-		}
-		response.InternalServerError(w, lang, response.CodeInternalServerError)
-		return
-	}
-
-	response.Success(w, lang, response.CodeSuccess, user)
+	resp := h.service.GetUserInfo(r.Context(), id)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // Register - POST /auth/register
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
-	lang := i18n.GetLanguageFromContext(r.Context())
-
 	var input RegisterRequest
 
 	// Validate request (will parse multipart form if needed)
@@ -181,16 +124,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		avatarFile = fileHeader
 	}
 
-	// Register
-	user, err := h.service.Register(r.Context(), input.Name, input.Email, input.Password, nil, avatarFile)
-	if err != nil {
-		if err.Error() == "email already exists" {
-			response.Conflict(w, lang, response.CodeEmailAlreadyExists)
-			return
-		}
-		response.InternalServerError(w, lang, response.CodeInternalServerError)
-		return
-	}
-
-	response.Created(w, lang, response.CodeCreated, user)
+	resp := h.service.Register(r.Context(), input.Name, input.Email, input.Password, nil, avatarFile)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }

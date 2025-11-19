@@ -50,13 +50,9 @@ func (h *Handler) GetOrCreateConversation(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	conversation, err := h.service.GetOrCreateDirectConversation(r.Context(), user1ID, user2ID)
-	if err != nil {
-		response.BadRequest(w, lang, response.CodeBadRequest, err.Error())
-		return
-	}
-
-	response.Success(w, lang, response.CodeSuccess, conversation)
+	resp := h.service.GetOrCreateDirectConversation(r.Context(), user1ID, user2ID)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // SendMessage - POST /chats/messages
@@ -102,13 +98,9 @@ func (h *Handler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		replyToID = &id
 	}
 
-	message, err := h.service.SendMessage(r.Context(), conversationID, senderID, input.Content, messageType, replyToID)
-	if err != nil {
-		response.BadRequest(w, lang, response.CodeBadRequest, err.Error())
-		return
-	}
-
-	response.Created(w, lang, response.CodeCreated, message)
+	resp := h.service.SendMessage(r.Context(), conversationID, senderID, input.Content, messageType, replyToID)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // GetMessages - GET /chats/conversations/{id}/messages
@@ -147,14 +139,9 @@ func (h *Handler) GetMessages(w http.ResponseWriter, r *http.Request) {
 		perPage = 100
 	}
 
-	messages, pagination, err := h.service.GetMessages(r.Context(), conversationID, userUUID, page, perPage)
-	if err != nil {
-		response.BadRequest(w, lang, response.CodeBadRequest, err.Error())
-		return
-	}
-
-	responseData := utils.PaginatedResponse(messages, pagination)
-	response.Success(w, lang, response.CodeSuccess, responseData)
+	resp := h.service.GetMessages(r.Context(), conversationID, userUUID, page, perPage)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // GetConversations - GET /chats/conversations
@@ -172,11 +159,7 @@ func (h *Handler) GetConversations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conversations, err := h.service.GetConversations(r.Context(), userUUID)
-	if err != nil {
-		response.InternalServerError(w, lang, response.CodeInternalServerError)
-		return
-	}
-
-	response.Success(w, lang, response.CodeSuccess, conversations)
+	resp := h.service.GetConversations(r.Context(), userUUID)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }

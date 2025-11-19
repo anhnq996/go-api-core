@@ -42,5 +42,17 @@
   "LOGIN_SUCCESS": "Đăng nhập thành công",
   "LOGOUT_SUCCESS": "Đăng xuất thành công",
   "TOKEN_REFRESHED": "Làm mới token thành công",
-  "RATE_LIMIT_EXCEEDED": "Vượt quá giới hạn yêu cầu"
+  "RATE_LIMIT_EXCEEDED": "Vượt quá giới hạn yêu cầu",
+  "CANNOT_CHAT_WITH_SELF": "Không thể chat với chính mình",
+  "NOT_FRIEND": "Chỉ có thể chat với bạn bè",
+  "CONVERSATION_NOT_FOUND": "Conversation không tồn tại",
+  "NOT_PARTICIPANT": "Bạn không tham gia conversation này",
+  "MESSAGE_NOT_FOUND": "Tin nhắn được trả lời không tồn tại",
+  "REPLY_MESSAGE_NOT_IN_CONVERSATION": "Tin nhắn được trả lời không thuộc conversation này",
+  "SEND_MESSAGE_FAILED": "Lỗi gửi tin nhắn",
+  "GET_MESSAGES_FAILED": "Lỗi lấy tin nhắn",
+  "GET_CONVERSATIONS_FAILED": "Lỗi lấy danh sách conversations",
+  "CREATE_CONVERSATION_FAILED": "Lỗi tạo conversation",
+  "GET_CONVERSATION_FAILED": "Lỗi lấy conversation",
+  "CHECK_FRIENDSHIP_FAILED": "Lỗi kiểm tra quan hệ bạn bè"
 }

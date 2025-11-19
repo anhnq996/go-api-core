@@ -1,6 +1,7 @@
 package user
 
 import (
+	"encoding/json"
 	"mime/multipart"
 	"net/http"
 	"time"
@@ -40,42 +41,25 @@ func NewHandler(svc *Service) *Handler {
 
 // Index - GET /users
 func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
-	lang := i18n.GetLanguageFromContext(r.Context())
-
 	// Parse query parameters using common function
 	params := utils.ParseQueryParams(r)
 
-	// Get users with pagination
-	users, pagination, err := h.service.GetListWithPagination(params.Page, params.PerPage, params.Sort, params.Order, params.Search)
-	if err != nil {
-		response.InternalServerError(w, lang, response.CodeInternalServerError)
-		return
-	}
-
-	// Create response data using common helper
-	responseData := utils.PaginatedResponse(users, pagination)
-
-	response.Success(w, lang, response.CodeSuccess, responseData)
+	resp := h.service.GetListWithPagination(r.Context(), params.Page, params.PerPage, params.Sort, params.Order, params.Search)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // Show - GET /users/{id}
 func (h *Handler) Show(w http.ResponseWriter, r *http.Request) {
-	lang := i18n.GetLanguageFromContext(r.Context())
 	id := chi.URLParam(r, "id")
 
-	user, err := h.service.GetByID(id)
-	if err != nil {
-		response.NotFound(w, lang, response.CodeUserNotFound)
-		return
-	}
-
-	response.Success(w, lang, response.CodeSuccess, user)
+	resp := h.service.GetByID(r.Context(), id)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // Store - POST /users
 func (h *Handler) Store(w http.ResponseWriter, r *http.Request) {
-	lang := i18n.GetLanguageFromContext(r.Context())
-
 	var input CreateUserRequest
 
 	// Validate request (will parse multipart form if needed)
@@ -103,18 +87,13 @@ func (h *Handler) Store(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Gọi service với FCM token (nếu có)
-	created, err := h.service.Create(r.Context(), u, avatarFile, fcmToken)
-	if err != nil {
-		response.InternalServerError(w, lang, response.CodeInternalServerError)
-		return
-	}
-
-	response.Created(w, lang, response.CodeCreated, created)
+	resp := h.service.Create(r.Context(), u, avatarFile, fcmToken)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // Update - PUT /users/{id}
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
-	lang := i18n.GetLanguageFromContext(r.Context())
 	id := chi.URLParam(r, "id")
 
 	var input UpdateUserRequest
@@ -138,26 +117,18 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		Avatar: input.Avatar,
 	}
 
-	updated, err := h.service.Update(r.Context(), id, u, avatarFile)
-	if err != nil {
-		response.InternalServerError(w, lang, response.CodeInternalServerError)
-		return
-	}
-
-	response.Success(w, lang, response.CodeUpdated, updated)
+	resp := h.service.Update(r.Context(), id, u, avatarFile)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // Destroy - DELETE /users/{id}
 func (h *Handler) Destroy(w http.ResponseWriter, r *http.Request) {
-	lang := i18n.GetLanguageFromContext(r.Context())
 	id := chi.URLParam(r, "id")
 
-	if err := h.service.Delete(r.Context(), id); err != nil {
-		response.InternalServerError(w, lang, response.CodeInternalServerError)
-		return
-	}
-
-	response.Success(w, lang, response.CodeDeleted, nil)
+	resp := h.service.Delete(r.Context(), id)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // ExportUsers - GET /users/export
@@ -171,8 +142,37 @@ func (h *Handler) ExportUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get all users (without pagination for export)
-	users, _, err := h.service.GetListWithPagination(1, 1000, "", "", "") // Get up to 1000 users
+	resp := h.service.GetListWithPagination(r.Context(), 1, 1000, "", "", "") // Get up to 1000 users
+	if !resp.Success {
+		statusCode := response.GetHTTPStatusCode(resp.Code)
+		response.JSON(w, statusCode, *resp)
+		return
+	}
+
+	// Extract users from response data
+	// resp.Data is the result of PaginatedResponse which returns map[string]interface{} with "items" key
+	paginatedData, ok := resp.Data.(map[string]interface{})
+	if !ok {
+		response.InternalServerError(w, lang, response.CodeInternalServerError)
+		return
+	}
+
+	// Get items from paginated data
+	items, ok := paginatedData["items"]
+	if !ok {
+		response.InternalServerError(w, lang, response.CodeInternalServerError)
+		return
+	}
+
+	// Convert items to []model.User using JSON marshaling/unmarshaling
+	itemsBytes, err := json.Marshal(items)
 	if err != nil {
+		response.InternalServerError(w, lang, response.CodeInternalServerError)
+		return
+	}
+
+	var users []model.User
+	if err := json.Unmarshal(itemsBytes, &users); err != nil {
 		response.InternalServerError(w, lang, response.CodeInternalServerError)
 		return
 	}

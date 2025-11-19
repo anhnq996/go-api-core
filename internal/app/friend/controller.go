@@ -47,13 +47,9 @@ func (h *Handler) SendFriendRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	friendRequest, err := h.service.SendFriendRequest(r.Context(), senderID, receiverID)
-	if err != nil {
-		response.BadRequest(w, lang, response.CodeBadRequest, err.Error())
-		return
-	}
-
-	response.Created(w, lang, response.CodeCreated, friendRequest)
+	resp := h.service.SendFriendRequest(r.Context(), senderID, receiverID)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // AcceptFriendRequest - POST /friends/requests/accept
@@ -82,14 +78,9 @@ func (h *Handler) AcceptFriendRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.AcceptFriendRequest(r.Context(), requestID, receiverID); err != nil {
-		response.BadRequest(w, lang, response.CodeBadRequest, err.Error())
-		return
-	}
-
-	response.Success(w, lang, response.CodeSuccess, map[string]string{
-		"message": "Đã chấp nhận lời mời kết bạn",
-	})
+	resp := h.service.AcceptFriendRequest(r.Context(), requestID, receiverID)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // RejectFriendRequest - POST /friends/requests/reject
@@ -118,14 +109,9 @@ func (h *Handler) RejectFriendRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.RejectFriendRequest(r.Context(), requestID, receiverID); err != nil {
-		response.BadRequest(w, lang, response.CodeBadRequest, err.Error())
-		return
-	}
-
-	response.Success(w, lang, response.CodeSuccess, map[string]string{
-		"message": "Đã từ chối lời mời kết bạn",
-	})
+	resp := h.service.RejectFriendRequest(r.Context(), requestID, receiverID)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // CancelFriendRequest - POST /friends/requests/cancel
@@ -154,14 +140,9 @@ func (h *Handler) CancelFriendRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.CancelFriendRequest(r.Context(), requestID, senderID); err != nil {
-		response.BadRequest(w, lang, response.CodeBadRequest, err.Error())
-		return
-	}
-
-	response.Success(w, lang, response.CodeSuccess, map[string]string{
-		"message": "Đã hủy lời mời kết bạn",
-	})
+	resp := h.service.CancelFriendRequest(r.Context(), requestID, senderID)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // GetFriendsList - GET /friends
@@ -179,13 +160,9 @@ func (h *Handler) GetFriendsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	friends, err := h.service.GetFriendsList(r.Context(), userUUID)
-	if err != nil {
-		response.InternalServerError(w, lang, response.CodeInternalServerError)
-		return
-	}
-
-	response.Success(w, lang, response.CodeSuccess, friends)
+	resp := h.service.GetFriendsList(r.Context(), userUUID)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // GetPendingRequests - GET /friends/requests/pending
@@ -203,13 +180,9 @@ func (h *Handler) GetPendingRequests(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requests, err := h.service.GetPendingRequests(r.Context(), userUUID)
-	if err != nil {
-		response.InternalServerError(w, lang, response.CodeInternalServerError)
-		return
-	}
-
-	response.Success(w, lang, response.CodeSuccess, requests)
+	resp := h.service.GetPendingRequests(r.Context(), userUUID)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }
 
 // GetSentRequests - GET /friends/requests/sent
@@ -227,11 +200,7 @@ func (h *Handler) GetSentRequests(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requests, err := h.service.GetSentRequests(r.Context(), userUUID)
-	if err != nil {
-		response.InternalServerError(w, lang, response.CodeInternalServerError)
-		return
-	}
-
-	response.Success(w, lang, response.CodeSuccess, requests)
+	resp := h.service.GetSentRequests(r.Context(), userUUID)
+	statusCode := response.GetHTTPStatusCode(resp.Code)
+	response.JSON(w, statusCode, *resp)
 }

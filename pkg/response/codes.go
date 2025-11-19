@@ -67,6 +67,38 @@ const (
 
 	// Rate limit
 	CodeRateLimitExceeded = "RATE_LIMIT_EXCEEDED"
+
+	// Friend errors
+	CodeCannotSendRequestToSelf       = "CANNOT_SEND_REQUEST_TO_SELF"
+	CodeUserInactive                  = "USER_INACTIVE"
+	CodeAlreadyFriends                = "ALREADY_FRIENDS"
+	CodeFriendRequestPending          = "FRIEND_REQUEST_PENDING"
+	CodeFriendRequestNotFound         = "FRIEND_REQUEST_NOT_FOUND"
+	CodeNotRequestReceiver            = "NOT_REQUEST_RECEIVER"
+	CodeNotRequestSender              = "NOT_REQUEST_SENDER"
+	CodeFriendRequestNotPending       = "FRIEND_REQUEST_NOT_PENDING"
+	CodeCannotCancelNonPendingRequest = "CANNOT_CANCEL_NON_PENDING_REQUEST"
+	CodeSendFriendRequestFailed       = "SEND_FRIEND_REQUEST_FAILED"
+	CodeAcceptFriendRequestFailed     = "ACCEPT_FRIEND_REQUEST_FAILED"
+	CodeRejectFriendRequestFailed     = "REJECT_FRIEND_REQUEST_FAILED"
+	CodeCancelFriendRequestFailed     = "CANCEL_FRIEND_REQUEST_FAILED"
+	CodeGetFriendsListFailed          = "GET_FRIENDS_LIST_FAILED"
+	CodeGetPendingRequestsFailed      = "GET_PENDING_REQUESTS_FAILED"
+	CodeGetSentRequestsFailed         = "GET_SENT_REQUESTS_FAILED"
+	CodeCheckFriendshipFailed         = "CHECK_FRIENDSHIP_FAILED"
+
+	// Chat errors
+	CodeCannotChatWithSelf            = "CANNOT_CHAT_WITH_SELF"
+	CodeNotFriend                     = "NOT_FRIEND"
+	CodeConversationNotFound          = "CONVERSATION_NOT_FOUND"
+	CodeNotParticipant                = "NOT_PARTICIPANT"
+	CodeMessageNotFound               = "MESSAGE_NOT_FOUND"
+	CodeReplyMessageNotInConversation = "REPLY_MESSAGE_NOT_IN_CONVERSATION"
+	CodeSendMessageFailed             = "SEND_MESSAGE_FAILED"
+	CodeGetMessagesFailed             = "GET_MESSAGES_FAILED"
+	CodeGetConversationsFailed        = "GET_CONVERSATIONS_FAILED"
+	CodeCreateConversationFailed      = "CREATE_CONVERSATION_FAILED"
+	CodeGetConversationFailed         = "GET_CONVERSATION_FAILED"
 )
 
 // GetHTTPStatusCode trả về HTTP status code tương ứng với response code
@@ -130,6 +162,38 @@ func GetHTTPStatusCode(code string) int {
 
 		// Rate limit
 		CodeRateLimitExceeded: 429,
+
+		// Friend errors
+		CodeCannotSendRequestToSelf:       400,
+		CodeUserInactive:                  403,
+		CodeAlreadyFriends:                409,
+		CodeFriendRequestPending:          409,
+		CodeFriendRequestNotFound:         404,
+		CodeNotRequestReceiver:            403,
+		CodeNotRequestSender:              403,
+		CodeFriendRequestNotPending:       400,
+		CodeCannotCancelNonPendingRequest: 400,
+		CodeSendFriendRequestFailed:       500,
+		CodeAcceptFriendRequestFailed:     500,
+		CodeRejectFriendRequestFailed:     500,
+		CodeCancelFriendRequestFailed:     500,
+		CodeGetFriendsListFailed:          500,
+		CodeGetPendingRequestsFailed:      500,
+		CodeGetSentRequestsFailed:         500,
+		CodeCheckFriendshipFailed:         500,
+
+		// Chat errors
+		CodeCannotChatWithSelf:            400,
+		CodeNotFriend:                     403,
+		CodeConversationNotFound:          404,
+		CodeNotParticipant:                403,
+		CodeMessageNotFound:               404,
+		CodeReplyMessageNotInConversation: 400,
+		CodeSendMessageFailed:             500,
+		CodeGetMessagesFailed:             500,
+		CodeGetConversationsFailed:        500,
+		CodeCreateConversationFailed:      500,
+		CodeGetConversationFailed:         500,
 	}
 
 	if status, ok := statusMap[code]; ok {
